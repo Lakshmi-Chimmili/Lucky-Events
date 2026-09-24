@@ -63,16 +63,16 @@ if (process.env.NODE_ENV !== 'test') {
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.status(200).json({
-    status: 'online',
-    app: 'Event Management Booking Platform API',
+    success: true,
+    message: 'Lucky Events API is running',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
   });
 });
 app.get('/api/health', (req, res) => {
   res.status(200).json({
-    status: 'online',
-    app: 'Event Management Booking Platform API',
+    success: true,
+    message: 'Lucky Events API is running',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
   });

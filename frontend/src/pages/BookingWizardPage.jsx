@@ -161,6 +161,7 @@ export const BookingWizardPage = () => {
   const [services, setServices] = useState(DEFAULT_SERVICES);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [confirmedBooking, setConfirmedBooking] = useState(null);
 
   // Wizard Steps: 1: Category, 2: Details & Headcount, 3: Add-ons, 4: Review
   const [currentStep, setCurrentStep] = useState(1);
@@ -296,18 +297,17 @@ export const BookingWizardPage = () => {
         }
       }
 
-      if (res && (res.success || res.data || res.booking)) {
+      const createdBooking = res.booking || res.data;
+      if (createdBooking && (createdBooking._id || createdBooking.id)) {
+        setConfirmedBooking(createdBooking);
         showToast('Booking successfully confirmed & recorded!', 'success');
 
         // Confetti celebration!
         confetti({
-          particleCount: 120,
-          spread: 80,
-          origin: { y: 0.6 },
+          particleCount: 140,
+          spread: 90,
+          origin: { y: 0.5 },
         });
-
-        // Redirect to customer dashboard
-        navigate('/my-bookings');
       }
     } catch (err) {
       showToast(err.message || 'Failed to submit booking.', 'error');
@@ -318,6 +318,106 @@ export const BookingWizardPage = () => {
 
   if (loading) {
     return <LoadingSpinner label="Preparing booking wizard..." padding="120px 20px" />;
+  }
+
+  // Section 7: Confirmation Screen when booking succeeds
+  if (confirmedBooking) {
+    const bId = confirmedBooking._id || confirmedBooking.id;
+    const catName = confirmedBooking.category?.name || selectedCategory?.name || 'Event';
+    const attendees = confirmedBooking.attendeeCount || count;
+    const dateStr = new Date(confirmedBooking.eventDate || eventDate).toLocaleDateString('en-GB', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+    const venue = confirmedBooking.venueAddress || venueAddress;
+    const grandTotalVal = confirmedBooking.priceBreakdown?.grandTotal || grandTotal;
+    const statusVal = confirmedBooking.status || 'pending';
+
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-12 text-center">
+        <div className="bg-[#0f172a] border border-emerald-500/30 rounded-3xl p-8 sm:p-12 shadow-2xl space-y-8">
+          <div className="inline-flex p-4 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 mb-2">
+            <CheckCircle2 size={48} />
+          </div>
+
+          <h1 className="text-3xl sm:text-5xl font-black text-white">🎉 Booking Confirmed!</h1>
+          <p className="text-slate-400 text-sm">
+            Your event staffing &amp; manager reservation has been recorded in the database.
+          </p>
+
+          <div className="bg-[#090d16] border border-white/10 rounded-2xl p-6 text-left space-y-4 font-sans">
+            <div>
+              <span className="text-xs uppercase tracking-wider font-extrabold text-slate-400 block mb-1">Booking ID:</span>
+              <span className="font-mono text-lg font-bold text-indigo-400 select-all tracking-wider">{bId}</span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-white/10">
+              <div>
+                <span className="text-xs uppercase tracking-wider text-slate-400 block font-semibold">Event:</span>
+                <span className="text-white font-bold text-base">{catName}</span>
+              </div>
+              <div>
+                <span className="text-xs uppercase tracking-wider text-slate-400 block font-semibold">Attendees:</span>
+                <span className="text-white font-bold text-base">{attendees}</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-white/10">
+              <div>
+                <span className="text-xs uppercase tracking-wider text-slate-400 block font-semibold">Event Date:</span>
+                <span className="text-white font-bold text-base">{dateStr}</span>
+              </div>
+              <div>
+                <span className="text-xs uppercase tracking-wider text-slate-400 block font-semibold">Venue:</span>
+                <span className="text-white font-bold text-base">{venue}</span>
+              </div>
+            </div>
+
+            {selectedServices.length > 0 && (
+              <div className="pt-3 border-t border-white/10">
+                <span className="text-xs uppercase tracking-wider text-slate-400 block font-semibold mb-2">Services:</span>
+                <div className="flex flex-wrap gap-2">
+                  {selectedServices.map((s) => (
+                    <span key={s._id} className="text-xs bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-3 py-1 rounded-full font-bold">
+                      {s.name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="pt-4 border-t border-white/10 flex items-center justify-between bg-indigo-500/10 p-4 rounded-xl border border-indigo-500/20">
+              <div>
+                <span className="text-xs uppercase tracking-wider text-slate-400 block font-semibold">Total Amount:</span>
+                <span className="text-2xl font-black text-emerald-400 font-mono">₹{grandTotalVal.toLocaleString('en-IN')}</span>
+              </div>
+              <div className="text-right">
+                <span className="text-xs uppercase tracking-wider text-slate-400 block font-semibold">Status:</span>
+                <span className="text-xs font-bold px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                  {statusVal === 'pending' ? 'Pending Confirmation' : statusVal}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
+            <Link
+              to="/my-bookings"
+              className="bg-gradient-to-r from-indigo-500 to-pink-500 hover:from-indigo-600 hover:to-pink-600 text-white font-bold px-8 py-3.5 rounded-full text-sm shadow-lg shadow-indigo-500/30 transition-all hover:scale-105"
+            >
+              View My Bookings
+            </Link>
+            <Link
+              to="/dashboard"
+              className="bg-white/5 hover:bg-white/10 border border-white/15 text-white font-semibold px-8 py-3.5 rounded-full text-sm transition-all"
+            >
+              Back to Dashboard
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const steps = [
