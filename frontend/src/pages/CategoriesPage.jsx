@@ -4,15 +4,50 @@ import { categoryAPI } from '../api/axios';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ArrowRight, Users, CheckCircle } from 'lucide-react';
 
+const DEFAULT_CATEGORIES = [
+  {
+    _id: '6ab51674725d99e2dadd0e26',
+    name: 'Birthday Party',
+    description: 'Vibrant birthdays with energetic party hosts, interactive games, balloon setups, and music.',
+    image: 'https://images.unsplash.com/photo-1513151233558-d860c5398176?w=800&auto=format&fit=crop&q=80',
+    basePricePerAttendee: 500,
+  },
+  {
+    _id: '6ab51674725d99e2dadd0e27',
+    name: 'Wedding/Marriage',
+    description: 'Grand royal wedding coordination, full hospitality managers, guest welcoming, and flawless execution.',
+    image: 'https://images.unsplash.com/photo-1519741497674-611481863552?w=800&auto=format&fit=crop&q=80',
+    basePricePerAttendee: 1500,
+  },
+  {
+    _id: '6ab51674725d99e2dadd0e28',
+    name: 'Corporate/Professional',
+    description: 'Elite corporate summits, executive conferences, seminars, team retreats, and annual galas.',
+    image: 'https://images.unsplash.com/photo-1511578314322-379afb476865?w=800&auto=format&fit=crop&q=80',
+    basePricePerAttendee: 1000,
+  },
+  {
+    _id: '6ab51674725d99e2dadd0e29',
+    name: 'Family Function',
+    description: 'Intimate anniversaries, housewarming rituals, baby showers, and reunions handled with warmth.',
+    image: 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=800&auto=format&fit=crop&q=80',
+    basePricePerAttendee: 700,
+  },
+];
+
 export const CategoriesPage = () => {
-  const [categories, setCategories] = useState([]);
+  const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchCats = async () => {
       try {
         const res = await categoryAPI.getAll();
-        if (res.success) setCategories(res.data);
+        if (res && res.success && Array.isArray(res.data) && res.data.length > 0) {
+          setCategories(res.data);
+        } else if (Array.isArray(res) && res.length > 0) {
+          setCategories(res);
+        }
       } catch (err) {
         console.error('Failed to load categories:', err);
       } finally {
