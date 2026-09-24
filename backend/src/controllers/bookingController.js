@@ -36,22 +36,31 @@ const createBooking = async (req, res, next) => {
 
     // 1. Fetch Category from Database (flexible lookup by ID, name, or preset)
     let categoryDoc = null;
-    if (mongoose.Types.ObjectId.isValid(categoryId)) {
-      categoryDoc = await Category.findById(categoryId);
+    const catIdStr = typeof categoryId === 'string' ? categoryId : (categoryId?._id || categoryId?.name || '');
+
+    if (mongoose.Types.ObjectId.isValid(catIdStr)) {
+      categoryDoc = await Category.findById(catIdStr);
     }
 
-    if (!categoryDoc) {
-      // Find by exact or partial name
+    if (!categoryDoc && catIdStr) {
       categoryDoc = await Category.findOne({
         $or: [
-          { name: categoryId },
-          { name: new RegExp(`^${categoryId}$`, 'i') },
+          { name: catIdStr },
+          { name: new RegExp(`^${catIdStr}$`, 'i') },
+        ],
+      });
+    }
+
+    if (!categoryDoc && req.body.categoryName) {
+      categoryDoc = await Category.findOne({
+        $or: [
+          { name: req.body.categoryName },
+          { name: new RegExp(`^${req.body.categoryName}$`, 'i') },
         ],
       });
     }
 
     if (!categoryDoc) {
-      // Map preset IDs to category names
       const presetCategoryMap = {
         '6ab51674725d99e2dadd0e26': 'Birthday Party',
         '6ab51674725d99e2dadd0e27': 'Wedding/Marriage',
@@ -62,18 +71,20 @@ const createBooking = async (req, res, next) => {
         '6ab51674725d99e2dadd0e2c': 'Concert & Stage Show',
         '6ab51674725d99e2dadd0e2d': 'Baby Shower & Naming Ceremony',
       };
-      const targetName = presetCategoryMap[categoryId];
+      const targetName = presetCategoryMap[catIdStr] || presetCategoryMap[categoryId];
       if (targetName) {
         categoryDoc = await Category.findOne({ name: targetName });
       }
     }
 
-    // Safety fallback: pick the first active category if still null
     if (!categoryDoc) {
       categoryDoc = await Category.findOne({ isActive: true });
     }
 
-    // Auto-healing fallback: Create category on the fly if DB is completely empty
+    if (!categoryDoc) {
+      categoryDoc = await Category.findOne();
+    }
+
     if (!categoryDoc) {
       const targetCategoryName = req.body.categoryName || 'Birthday Party';
       const categoryPriceMap = {
@@ -88,13 +99,22 @@ const createBooking = async (req, res, next) => {
       };
       const basePrice = categoryPriceMap[targetCategoryName] || 400;
 
-      categoryDoc = await Category.create({
-        name: targetCategoryName,
-        description: `${targetCategoryName} staffing, hosts, and management setup.`,
-        basePricePerAttendee: basePrice,
-        image: 'https://images.unsplash.com/photo-1513151233558-d860c5398176?w=800',
-        isActive: true,
-      });
+      try {
+        categoryDoc = await Category.create({
+          name: targetCategoryName,
+          description: `${targetCategoryName} staffing, hosts, and management setup.`,
+          basePricePerAttendee: basePrice,
+          image: 'https://images.unsplash.com/photo-1513151233558-d860c5398176?w=800',
+          isActive: true,
+        });
+      } catch (err) {
+        categoryDoc = (await Category.findOne()) || new Category({
+          _id: new mongoose.Types.ObjectId(),
+          name: targetCategoryName,
+          basePricePerAttendee: basePrice,
+          isActive: true,
+        });
+      }
     }
 
     // 2. Fetch Selected Add-on Services from Database

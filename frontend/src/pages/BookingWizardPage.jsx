@@ -217,7 +217,10 @@ export const BookingWizardPage = () => {
   }, [searchParams]);
 
   // Derived selected category and add-on objects
-  const selectedCategory = categories.find((c) => c._id === selectedCategoryId);
+  const selectedCategory =
+    categories.find((c) => c._id === selectedCategoryId || c.name === selectedCategoryId) ||
+    DEFAULT_CATEGORIES.find((c) => c._id === selectedCategoryId || c.name === selectedCategoryId) ||
+    DEFAULT_CATEGORIES[0];
   const selectedServices = services.filter((s) => selectedAddOnIds.includes(s._id));
 
   // --- Real-time Price Computation (identical to server formula) ---
