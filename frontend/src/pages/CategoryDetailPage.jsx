@@ -4,9 +4,72 @@ import { categoryAPI } from '../api/axios';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ArrowLeft, ArrowRight, CheckCircle2, ShieldCheck, Users } from 'lucide-react';
 
+const DEFAULT_CATEGORIES = [
+  {
+    _id: '6ab51674725d99e2dadd0e26',
+    name: 'Birthday Party',
+    description: 'Vibrant birthdays with energetic party hosts, interactive games, balloon setups, and music.',
+    image: 'https://images.unsplash.com/photo-1513151233558-d860c5398176?w=800&auto=format&fit=crop&q=80',
+    basePricePerAttendee: 400,
+  },
+  {
+    _id: '6ab51674725d99e2dadd0e27',
+    name: 'Wedding/Marriage',
+    description: 'Grand royal wedding coordination, full hospitality managers, guest welcoming, and flawless execution.',
+    image: 'https://images.unsplash.com/photo-1519741497674-611481863552?w=800&auto=format&fit=crop&q=80',
+    basePricePerAttendee: 1200,
+  },
+  {
+    _id: '6ab51674725d99e2dadd0e28',
+    name: 'Corporate/Professional',
+    description: 'Elite corporate summits, executive conferences, seminars, team retreats, and annual galas.',
+    image: 'https://images.unsplash.com/photo-1511578314322-379afb476865?w=800&auto=format&fit=crop&q=80',
+    basePricePerAttendee: 800,
+  },
+  {
+    _id: '6ab51674725d99e2dadd0e29',
+    name: 'Family Function',
+    description: 'Intimate anniversaries, housewarming rituals, baby showers, and reunions handled with warmth.',
+    image: 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=800&auto=format&fit=crop&q=80',
+    basePricePerAttendee: 500,
+  },
+  {
+    _id: '6ab51674725d99e2dadd0e2a',
+    name: 'Festival & Cultural Celebration',
+    description: 'Traditional festivals, cultural nights, community gatherings, and festive stage management.',
+    image: 'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=800&auto=format&fit=crop&q=80',
+    basePricePerAttendee: 450,
+  },
+  {
+    _id: '6ab51674725d99e2dadd0e2b',
+    name: 'Anniversary & Engagement',
+    description: 'Romantic engagement ceremonies, ring exchange functions, and milestone wedding anniversary celebrations.',
+    image: 'https://images.unsplash.com/photo-1522673607200-164d1b6ce486?w=800&auto=format&fit=crop&q=80',
+    basePricePerAttendee: 600,
+  },
+  {
+    _id: '6ab51674725d99e2dadd0e2c',
+    name: 'Concert & Stage Show',
+    description: 'Large scale music concerts, live performances, award shows, and stage management with sound & lighting.',
+    image: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=800&auto=format&fit=crop&q=80',
+    basePricePerAttendee: 750,
+  },
+  {
+    _id: '6ab51674725d99e2dadd0e2d',
+    name: 'Baby Shower & Naming Ceremony',
+    description: 'Charming traditional & modern baby shower ceremonies, cradling events, and family welcoming rituals.',
+    image: 'https://images.unsplash.com/photo-1519689680058-324335c77eba?w=800&auto=format&fit=crop&q=80',
+    basePricePerAttendee: 350,
+  },
+];
+
 export const CategoryDetailPage = () => {
   const { id } = useParams();
-  const [category, setCategory] = useState(null);
+  const [category, setCategory] = useState(() => {
+    return DEFAULT_CATEGORIES.find(
+      (c) => c._id === id || c.name.toLowerCase() === (id || '').toLowerCase()
+    ) || DEFAULT_CATEGORIES[0];
+  });
   const [loading, setLoading] = useState(true);
   const [guestEstimate, setGuestEstimate] = useState(50);
 
@@ -14,7 +77,11 @@ export const CategoryDetailPage = () => {
     const fetchCategory = async () => {
       try {
         const res = await categoryAPI.getById(id);
-        if (res.success) setCategory(res.data);
+        if (res && res.success && res.data) {
+          setCategory(res.data);
+        } else if (res && res.data) {
+          setCategory(res.data);
+        }
       } catch (err) {
         console.error('Failed to fetch category:', err);
       } finally {

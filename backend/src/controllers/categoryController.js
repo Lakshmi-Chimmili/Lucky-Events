@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Category = require('../models/Category');
 
 // @desc    Get all categories
@@ -19,12 +20,48 @@ const getCategories = async (req, res, next) => {
   }
 };
 
-// @desc    Get single category by ID
+// @desc    Get single category by ID, name, or preset
 // @route   GET /categories/:id
 // @access  Public
 const getCategoryById = async (req, res, next) => {
   try {
-    const category = await Category.findById(req.params.id);
+    const id = req.params.id;
+    let category = null;
+
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      category = await Category.findById(id);
+    }
+
+    if (!category) {
+      category = await Category.findOne({
+        $or: [
+          { name: id },
+          { name: new RegExp(`^${id}$`, 'i') },
+        ],
+      });
+    }
+
+    if (!category) {
+      const presetCategoryMap = {
+        '6ab51674725d99e2dadd0e26': 'Birthday Party',
+        '6ab51674725d99e2dadd0e27': 'Wedding/Marriage',
+        '6ab51674725d99e2dadd0e28': 'Corporate/Professional',
+        '6ab51674725d99e2dadd0e29': 'Family Function',
+        '6ab51674725d99e2dadd0e2a': 'Festival & Cultural Celebration',
+        '6ab51674725d99e2dadd0e2b': 'Anniversary & Engagement',
+        '6ab51674725d99e2dadd0e2c': 'Concert & Stage Show',
+        '6ab51674725d99e2dadd0e2d': 'Baby Shower & Naming Ceremony',
+      };
+      const name = presetCategoryMap[id];
+      if (name) {
+        category = await Category.findOne({ name });
+      }
+    }
+
+    if (!category) {
+      category = await Category.findOne({ isActive: true });
+    }
+
     if (!category) {
       return res.status(404).json({ success: false, message: 'Category not found' });
     }
