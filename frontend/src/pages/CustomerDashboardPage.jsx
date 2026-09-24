@@ -164,6 +164,10 @@ export const CustomerDashboardPage = () => {
                       src={b.category?.image || 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=800'}
                       alt={b.category?.name}
                       className="w-16 h-16 rounded-2xl object-cover border border-white/10"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=800';
+                      }}
                     />
                     <div>
                       <div className="flex items-center gap-3">

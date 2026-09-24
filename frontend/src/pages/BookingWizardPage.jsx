@@ -245,7 +245,15 @@ export const BookingWizardPage = () => {
                       }`}
                     >
                       <div className="h-32 rounded-xl overflow-hidden mb-3 relative">
-                        <img src={cat.image} alt={cat.name} className="w-full h-full object-cover" />
+                        <img
+                          src={cat.image || 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=800'}
+                          alt={cat.name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=800';
+                          }}
+                        />
                         {isSelected && (
                           <div className="absolute top-2 right-2 bg-indigo-600 text-white p-1 rounded-full">
                             <Check size={14} />

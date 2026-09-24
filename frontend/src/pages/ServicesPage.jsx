@@ -41,7 +41,15 @@ export const ServicesPage = () => {
               className="bg-[#0f172a] border border-white/10 rounded-2xl overflow-hidden hover:border-pink-500/50 transition-all flex flex-col justify-between"
             >
               <div className="h-48 overflow-hidden relative">
-                <img src={serv.image} alt={serv.name} className="w-full h-full object-cover" />
+                <img
+                  src={serv.image || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=800'}
+                  alt={serv.name}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=800';
+                  }}
+                />
                 <span
                   className={`absolute top-3 right-3 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider ${
                     serv.pricingType === 'flat'

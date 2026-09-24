@@ -42,9 +42,13 @@ export const CategoriesPage = () => {
             >
               <div className="md:w-1/2 h-56 md:h-auto relative">
                 <img
-                  src={cat.image}
+                  src={cat.image || 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=800'}
                   alt={cat.name}
                   className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=800';
+                  }}
                 />
                 <div className="absolute top-3 left-3 bg-[#090d16]/90 border border-white/20 text-indigo-300 text-xs font-bold px-3 py-1 rounded-full">
                   ₹{cat.basePricePerAttendee} / attendee
