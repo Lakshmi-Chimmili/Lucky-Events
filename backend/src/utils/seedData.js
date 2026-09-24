@@ -1,230 +1,214 @@
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const User = require('../models/User');
-const Event = require('../models/Event');
-const RSVP = require('../models/RSVP');
+const Category = require('../models/Category');
+const Service = require('../models/Service');
+const Booking = require('../models/Booking');
 
 dotenv.config({ path: __dirname + '/../../.env' });
 
 const seedDatabase = async () => {
   try {
-    const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/luckyevents';
+    const mongoUri =
+      process.env.MONGO_URI ||
+      'mongodb://localhost:27017/luckyevents';
+
+    console.log('[Seed] Connecting to MongoDB...');
     await mongoose.connect(mongoUri);
-    console.log('[Seed] Connected to MongoDB at', mongoUri);
+    console.log('[Seed] Connected successfully.');
 
-    // Clear existing data
-    await RSVP.deleteMany({});
-    await Event.deleteMany({});
+    // Clear existing collections
+    await Booking.deleteMany({});
+    await Service.deleteMany({});
+    await Category.deleteMany({});
     await User.deleteMany({});
-    console.log('[Seed] Cleared existing data.');
+    console.log('[Seed] Cleared existing database records.');
 
-    // 1. Create Users
-    const adminUser = await User.create({
-      name: 'Eleanor Vance',
+    // 1. Seed Users (Admin, Staff, Customer)
+    const adminPasswordHash = await User.hashPassword('admin123');
+    const staffPasswordHash = await User.hashPassword('staff123');
+    const customerPasswordHash = await User.hashPassword('customer123');
+
+    const admin = await User.create({
+      name: 'Executive Admin',
       email: 'admin@luckyevents.com',
-      password: 'password123',
+      passwordHash: adminPasswordHash,
+      phone: '+91 98765 43210',
       role: 'admin',
-      organization: 'LuckyEvents HQ',
-      bio: 'Platform Administrator and Executive Event Producer.',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80',
     });
 
-    const organizerSarah = await User.create({
-      name: 'Sarah Jenkins',
-      email: 'sarah@luckyevents.com',
-      password: 'password123',
-      role: 'user',
-      organization: 'TechVibe Productions',
-      bio: 'Curating world-class developer summits and design intensives.',
-      avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=300&auto=format&fit=crop&q=80',
+    const staff1 = await User.create({
+      name: 'Rohan Sharma (Manager)',
+      email: 'staff@luckyevents.com',
+      passwordHash: staffPasswordHash,
+      phone: '+91 98765 11223',
+      role: 'staff',
     });
 
-    const attendeeAlex = await User.create({
-      name: 'Alex Rivera',
-      email: 'alex@luckyevents.com',
-      password: 'password123',
-      role: 'user',
-      organization: 'NextGen Solutions',
-      bio: 'Full-stack software engineer & community builder.',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80',
+    const staff2 = await User.create({
+      name: 'Priya Patel (Lead Coordinator)',
+      email: 'priya.staff@luckyevents.com',
+      passwordHash: staffPasswordHash,
+      phone: '+91 98765 33445',
+      role: 'staff',
     });
 
-    console.log('[Seed] Created default users:');
-    console.log('   - Admin: admin@luckyevents.com / password123');
-    console.log('   - Organizer: sarah@luckyevents.com / password123');
-    console.log('   - Attendee: alex@luckyevents.com / password123');
+    const customer = await User.create({
+      name: 'Ananya Verma',
+      email: 'customer@luckyevents.com',
+      passwordHash: customerPasswordHash,
+      phone: '+91 98765 55667',
+      role: 'customer',
+    });
 
-    // 2. Create Events
-    const now = new Date();
-    const addDays = (d) => new Date(now.getTime() + d * 24 * 60 * 60 * 1000);
+    console.log('[Seed] Seeded Users:');
+    console.log('   - Admin:    admin@luckyevents.com / admin123');
+    console.log('   - Staff:    staff@luckyevents.com / staff123');
+    console.log('   - Customer: customer@luckyevents.com / customer123');
 
-    const sampleEvents = [
+    // 2. Seed Categories per spec:
+    // Birthday Party 500 · Wedding/Marriage 1500 · Corporate/Professional 1000 · Family Function 700
+    const categoriesData = [
       {
-        title: 'Global AI & Cloud Summit 2026',
-        description:
-          'Join over 2,500 AI architects, cloud leaders, and machine learning researchers for 3 transformative days of keynote addresses, hands-on architectural labs, and deep dive breakout sessions on agentic frameworks and autonomous systems.',
-        category: 'Technology',
-        organizer: organizerSarah._id,
-        startDate: addDays(4),
-        endDate: addDays(6),
-        time: '09:00 AM - 05:30 PM PST',
-        isVirtual: false,
-        location: 'Moscone Convention Center, San Francisco, CA',
-        capacity: 350,
-        ticketType: 'Paid',
-        price: 299,
-        bannerImage:
-          'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1200&auto=format&fit=crop&q=80',
-        tags: ['AI', 'Cloud', 'Machine Learning', 'San Francisco', 'DeepTech'],
-        status: 'published',
-        featured: true,
+        name: 'Birthday Party',
+        description: 'Vibrant birthdays with energetic party hosts, interactive games, balloon setups, and music.',
+        image: 'https://images.unsplash.com/photo-1513151233558-d860c5398176?w=800&auto=format&fit=crop&q=80',
+        basePricePerAttendee: 500,
+        isActive: true,
       },
       {
-        title: 'SaaS Growth & Product Mastery Live',
-        description:
-          'An exclusive masterclass tailored for SaaS founders, product directors, and growth leads looking to accelerate from $1M to $20M ARR. Discover actionable pricing architectures, PLG strategies, and churn retention blueprints.',
-        category: 'Business',
-        organizer: adminUser._id,
-        startDate: addDays(7),
-        time: '11:00 AM - 03:00 PM EST',
-        isVirtual: true,
-        location: 'Global Virtual Stream',
-        virtualMeetingUrl: 'https://zoom.us/j/luckyevents-saas-mastery',
-        capacity: 500,
-        ticketType: 'Free',
-        price: 0,
-        bannerImage:
-          'https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=1200&auto=format&fit=crop&q=80',
-        tags: ['SaaS', 'Product', 'Founders', 'Growth', 'Masterclass'],
-        status: 'published',
-        featured: true,
+        name: 'Wedding/Marriage',
+        description: 'Grand royal wedding coordination, full hospitality managers, guest welcoming, and flawless execution.',
+        image: 'https://images.unsplash.com/photo-1519741497674-611481863552?w=800&auto=format&fit=crop&q=80',
+        basePricePerAttendee: 1500,
+        isActive: true,
       },
       {
-        title: 'UX/UI Next: Spatial Design & Design Systems',
-        description:
-          'Explore modern design tooling, typography orchestration, micro-interactions, and high-performance glassmorphic UI systems with industry design leads from Figma, Linear, and Vercel.',
-        category: 'Design',
-        organizer: organizerSarah._id,
-        startDate: addDays(12),
-        time: '10:00 AM - 04:00 PM GMT',
-        isVirtual: false,
-        location: 'The Shard, London, UK',
-        capacity: 120,
-        ticketType: 'Paid',
-        price: 149,
-        bannerImage:
-          'https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=1200&auto=format&fit=crop&q=80',
-        tags: ['UX', 'UI Design', 'Figma', 'London', 'Design Systems'],
-        status: 'published',
-        featured: true,
+        name: 'Corporate/Professional',
+        description: 'Elite corporate summits, executive conferences, seminars, team retreats, and annual galas.',
+        image: 'https://images.unsplash.com/photo-1511578314322-379afb476865?w=800&auto=format&fit=crop&q=80',
+        basePricePerAttendee: 1000,
+        isActive: true,
       },
       {
-        title: 'Silicon Valley Founders & Angel Mixer',
-        description:
-          'High-energy networking mixer connecting early-stage tech founders, venture capitalists, and top angel investors over curated drinks and lightning pitches in downtown Palo Alto.',
-        category: 'Networking',
-        organizer: adminUser._id,
-        startDate: addDays(2),
-        time: '06:30 PM - 10:00 PM PST',
-        isVirtual: false,
-        location: 'The Rosewood Sand Hill, Menlo Park, CA',
-        capacity: 80,
-        ticketType: 'Free',
-        price: 0,
-        bannerImage:
-          'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=1200&auto=format&fit=crop&q=80',
-        tags: ['Networking', 'VC', 'Startups', 'Silicon Valley', 'Angels'],
-        status: 'published',
-        featured: true,
-      },
-      {
-        title: 'Holistic Wellness & Executive Peak State Retreat',
-        description:
-          'Recharge mental clarity, breathwork, and longevity protocols with wellness scientists and elite performance coaches. Includes meditation, sound bath, and nutritionist meal pairing.',
-        category: 'Health & Wellness',
-        organizer: organizerSarah._id,
-        startDate: addDays(18),
-        time: '08:00 AM - 06:00 PM PST',
-        isVirtual: false,
-        location: 'Esalen Institute, Big Sur, CA',
-        capacity: 40,
-        ticketType: 'Paid',
-        price: 395,
-        bannerImage:
-          'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=1200&auto=format&fit=crop&q=80',
-        tags: ['Wellness', 'Mindfulness', 'Big Sur', 'Longevity', 'Retreat'],
-        status: 'published',
-        featured: false,
-      },
-      {
-        title: 'Next-Gen Performance Marketing & Creator Economy',
-        description:
-          'Master modern omnichannel distribution, high-converting video creative, performance TikTok/Meta ad engines, and creator brand partnerships.',
-        category: 'Marketing',
-        organizer: adminUser._id,
-        startDate: addDays(22),
-        time: '01:00 PM - 05:00 PM EST',
-        isVirtual: true,
-        location: 'Virtual Broadcast Stage',
-        virtualMeetingUrl: 'https://zoom.us/j/luckyevents-marketing-live',
-        capacity: 600,
-        ticketType: 'Free',
-        price: 0,
-        bannerImage:
-          'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=1200&auto=format&fit=crop&q=80',
-        tags: ['Marketing', 'Creator Economy', 'Social Ads', 'Branding'],
-        status: 'published',
-        featured: false,
+        name: 'Family Function',
+        description: 'Intimate anniversaries, housewarming rituals, baby showers, and reunions handled with warmth.',
+        image: 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=800&auto=format&fit=crop&q=80',
+        basePricePerAttendee: 700,
+        isActive: true,
       },
     ];
 
-    const createdEvents = await Event.insertMany(sampleEvents);
-    console.log(`[Seed] Created ${createdEvents.length} events.`);
+    const createdCategories = await Category.insertMany(categoriesData);
+    console.log(`[Seed] Seeded ${createdCategories.length} Categories.`);
 
-    // 3. Create initial RSVPs
-    const rsvp1 = await RSVP.create({
-      event: createdEvents[0]._id,
-      user: attendeeAlex._id,
-      status: 'attending',
-      guestCount: 2,
-      notes: 'Excited for the agentic systems keynote!',
-      ticketCode: 'TKT-AI2026-ALEX',
+    // 3. Seed Add-on Services per spec:
+    // Dance Performance → flat → 5000
+    // Games & Entertainment → flat → 3000
+    // Natural/Floral Decoration → perAttendee → 150
+    // DJ & Music → flat → 8000
+    // Photography & Videography → flat → 10000
+    // Catering → perAttendee → 300
+    const servicesData = [
+      {
+        name: 'Dance Performance',
+        description: 'Choreographed troupe performances, flash mob, and traditional or contemporary stage dances.',
+        image: 'https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=800&auto=format&fit=crop&q=80',
+        pricingType: 'flat',
+        price: 5000,
+        isActive: true,
+      },
+      {
+        name: 'Games & Entertainment',
+        description: 'Interactive anchor-hosted party games, trivia challenges, magic shows, and fun prizes.',
+        image: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&auto=format&fit=crop&q=80',
+        pricingType: 'flat',
+        price: 3000,
+        isActive: true,
+      },
+      {
+        name: 'Natural/Floral Decoration',
+        description: 'Exquisite fresh floral mandaps, floral entrance arches, and centerpiece table bouquets.',
+        image: 'https://images.unsplash.com/photo-1526047932273-341f2a7631f9?w=800&auto=format&fit=crop&q=80',
+        pricingType: 'perAttendee',
+        price: 150,
+        isActive: true,
+      },
+      {
+        name: 'DJ & Music',
+        description: 'High-end concert sound rig, dynamic ambient lighting, subwoofer arrays, and professional DJ.',
+        image: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=800&auto=format&fit=crop&q=80',
+        pricingType: 'flat',
+        price: 8000,
+        isActive: true,
+      },
+      {
+        name: 'Photography & Videography',
+        description: '4K cinematic highlight reel, full event drone coverage, and high-res edited photo gallery.',
+        image: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=800&auto=format&fit=crop&q=80',
+        pricingType: 'flat',
+        price: 10000,
+        isActive: true,
+      },
+      {
+        name: 'Catering',
+        description: 'Gourmet multi-course buffet, live counter stations, dessert bar, and professional waitstaff.',
+        image: 'https://images.unsplash.com/photo-1555244162-803834f70033?w=800&auto=format&fit=crop&q=80',
+        pricingType: 'perAttendee',
+        price: 300,
+        isActive: true,
+      },
+    ];
+
+    const createdServices = await Service.insertMany(servicesData);
+    console.log(`[Seed] Seeded ${createdServices.length} Add-on Services.`);
+
+    // 4. Seed an initial sample booking using the exact worked example:
+    // Wedding (₹1500) * 100 attendees + Catering (300 * 100 = 30000) + DJ & Music (8000) = ₹188,000
+    const weddingCat = createdCategories.find((c) => c.name.includes('Wedding'));
+    const cateringServ = createdServices.find((s) => s.name === 'Catering');
+    const djServ = createdServices.find((s) => s.name === 'DJ & Music');
+
+    const sampleBooking = await Booking.create({
+      customer: customer._id,
+      category: weddingCat._id,
+      addOns: [cateringServ._id, djServ._id],
+      attendeeCount: 100,
+      eventDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // in 14 days
+      venueAddress: 'The Leela Palace Ballroom, Bengaluru',
+      notes: 'Need stage setup ready by 4:00 PM for Sangeet & Reception.',
+      priceBreakdown: {
+        categoryName: weddingCat.name,
+        basePricePerAttendee: weddingCat.basePricePerAttendee,
+        categoryTotal: 150000,
+        addOnsBreakdown: [
+          {
+            serviceId: cateringServ._id,
+            name: cateringServ.name,
+            pricingType: cateringServ.pricingType,
+            unitPrice: cateringServ.price,
+            lineTotal: 30000,
+          },
+          {
+            serviceId: djServ._id,
+            name: djServ.name,
+            pricingType: djServ.pricingType,
+            unitPrice: djServ.price,
+            lineTotal: 8000,
+          },
+        ],
+        addOnsTotal: 38000,
+        grandTotal: 188000,
+      },
+      status: 'assigned',
+      assignedStaff: [staff1._id],
     });
 
-    const rsvp2 = await RSVP.create({
-      event: createdEvents[1]._id,
-      user: attendeeAlex._id,
-      status: 'attending',
-      guestCount: 1,
-      notes: 'Attending remotely via Zoom.',
-      ticketCode: 'TKT-SAAS-ALEX',
-    });
-
-    const rsvp3 = await RSVP.create({
-      event: createdEvents[3]._id,
-      user: organizerSarah._id,
-      status: 'attending',
-      guestCount: 1,
-      notes: 'Looking forward to meeting angel syndicates.',
-      ticketCode: 'TKT-MIX-SARAH',
-    });
-
-    // Update rsvpCount on events
-    createdEvents[0].rsvpCount = 2;
-    await createdEvents[0].save();
-
-    createdEvents[1].rsvpCount = 1;
-    await createdEvents[1].save();
-
-    createdEvents[3].rsvpCount = 1;
-    await createdEvents[3].save();
-
-    console.log('[Seed] Created sample RSVPs and synced seat counts.');
-    console.log('[Seed] Database successfully seeded! 🎉');
-
+    console.log(`[Seed] Created Sample Booking with Grand Total: ₹${sampleBooking.priceBreakdown.grandTotal.toLocaleString('en-IN')}`);
+    console.log('[Seed] Database successfully populated! ✨');
     process.exit(0);
-  } catch (error) {
-    console.error('[Seed] Error seeding database:', error);
+  } catch (err) {
+    console.error('[Seed] Error seeding database:', err);
     process.exit(1);
   }
 };

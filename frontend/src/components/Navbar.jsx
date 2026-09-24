@@ -1,491 +1,203 @@
-import React, { useState, useEffect, useRef } from 'react';
-import styled from 'styled-components';
+import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   Sparkles,
   Calendar,
-  PlusCircle,
+  Layers,
+  Sparkle,
   User,
-  Ticket,
   LogOut,
   Menu,
   X,
-  ChevronDown,
-  LayoutDashboard,
+  ShieldAlert,
+  Briefcase,
+  Ticket,
+  PlusCircle,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
-const Header = styled.header`
-  position: sticky;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 500;
-  background: ${({ $scrolled, theme }) =>
-    $scrolled ? 'rgba(9, 13, 22, 0.85)' : 'rgba(9, 13, 22, 0.5)'};
-  backdrop-filter: blur(16px);
-  border-bottom: 1px solid
-    ${({ $scrolled, theme }) =>
-      $scrolled ? theme.colors.borderLight : 'rgba(255, 255, 255, 0.05)'};
-  transition: ${({ theme }) => theme.transitions.normal};
-`;
-
-const NavContainer = styled.div`
-  max-width: 1240px;
-  margin: 0 auto;
-  padding: 0 24px;
-  height: 74px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-`;
-
-const LogoLink = styled(Link)`
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-family: ${({ theme }) => theme.fonts.heading};
-  font-size: 1.45rem;
-  font-weight: 800;
-  color: ${({ theme }) => theme.colors.white};
-  letter-spacing: -0.5px;
-
-  span {
-    background: linear-gradient(135deg, #6366f1 0%, #ec4899 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
-`;
-
-const LogoIcon = styled.div`
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #ffffff;
-  box-shadow: 0 0 15px rgba(99, 102, 241, 0.5);
-`;
-
-const NavLinks = styled.nav`
-  display: flex;
-  align-items: center;
-  gap: 32px;
-
-  @media (max-width: ${({ theme }) => theme.breakpoints.tablet}) {
-    display: none;
-  }
-`;
-
-const NavItem = styled(Link)`
-  color: ${({ $active, theme }) =>
-    $active ? theme.colors.white : theme.colors.textSecondary};
-  font-size: 0.95rem;
-  font-weight: 500;
-  transition: ${({ theme }) => theme.transitions.fast};
-  position: relative;
-
-  &:hover {
-    color: ${({ theme }) => theme.colors.white};
-  }
-
-  ${({ $active, theme }) =>
-    $active &&
-    `
-    &::after {
-      content: '';
-      position: absolute;
-      bottom: -6px;
-      left: 0;
-      right: 0;
-      height: 2px;
-      background: ${theme.colors.primary};
-      border-radius: 2px;
-    }
-  `}
-`;
-
-const ActionsContainer = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 16px;
-
-  @media (max-width: ${({ theme }) => theme.breakpoints.tablet}) {
-    display: none;
-  }
-`;
-
-const CreateBtn = styled(Link)`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-  color: #ffffff !important;
-  padding: 10px 20px;
-  border-radius: ${({ theme }) => theme.radii.full};
-  font-size: 0.9rem;
-  font-weight: 600;
-  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
-  transition: ${({ theme }) => theme.transitions.fast};
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
-  }
-`;
-
-const LoginBtn = styled(Link)`
-  color: ${({ theme }) => theme.colors.text};
-  font-size: 0.95rem;
-  font-weight: 600;
-  padding: 8px 16px;
-  border-radius: ${({ theme }) => theme.radii.md};
-  transition: ${({ theme }) => theme.transitions.fast};
-
-  &:hover {
-    color: ${({ theme }) => theme.colors.white};
-    background: rgba(255, 255, 255, 0.06);
-  }
-`;
-
-const SignupBtn = styled(Link)`
-  background: rgba(255, 255, 255, 0.1);
-  color: ${({ theme }) => theme.colors.white} !important;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  padding: 9px 18px;
-  border-radius: ${({ theme }) => theme.radii.full};
-  font-size: 0.9rem;
-  font-weight: 600;
-  transition: ${({ theme }) => theme.transitions.fast};
-
-  &:hover {
-    background: rgba(255, 255, 255, 0.2);
-    border-color: rgba(255, 255, 255, 0.4);
-  }
-`;
-
-const UserMenuWrapper = styled.div`
-  position: relative;
-`;
-
-const UserAvatarBtn = styled.button`
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 5px 12px 5px 6px;
-  border-radius: ${({ theme }) => theme.radii.full};
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: ${({ theme }) => theme.colors.text};
-  transition: ${({ theme }) => theme.transitions.fast};
-
-  &:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.2);
-  }
-
-  img {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    object-fit: cover;
-  }
-`;
-
-const DropdownMenu = styled.div`
-  position: absolute;
-  top: calc(100% + 10px);
-  right: 0;
-  width: 230px;
-  background: ${({ theme }) => theme.colors.bgSecondary};
-  border: 1px solid ${({ theme }) => theme.colors.borderLight};
-  border-radius: ${({ theme }) => theme.radii.lg};
-  box-shadow: ${({ theme }) => theme.shadows.xl};
-  padding: 8px;
-  z-index: 100;
-  animation: fadeIn 0.2s ease-out;
-`;
-
-const UserInfoBlock = styled.div`
-  padding: 12px 14px 10px;
-  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
-  margin-bottom: 6px;
-
-  .name {
-    font-weight: 700;
-    font-size: 0.95rem;
-    color: ${({ theme }) => theme.colors.white};
-  }
-
-  .email {
-    font-size: 0.8rem;
-    color: ${({ theme }) => theme.colors.textMuted};
-    text-overflow: ellipsis;
-    overflow: hidden;
-    white-space: nowrap;
-  }
-`;
-
-const DropdownItem = styled(Link)`
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
-  border-radius: ${({ theme }) => theme.radii.md};
-  font-size: 0.88rem;
-  color: ${({ theme }) => theme.colors.textSecondary};
-  font-weight: 500;
-  transition: ${({ theme }) => theme.transitions.fast};
-
-  &:hover {
-    background: rgba(255, 255, 255, 0.08);
-    color: ${({ theme }) => theme.colors.white};
-  }
-`;
-
-const DropdownButton = styled.button`
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
-  border-radius: ${({ theme }) => theme.radii.md};
-  font-size: 0.88rem;
-  color: ${({ theme }) => theme.colors.rose};
-  font-weight: 500;
-  transition: ${({ theme }) => theme.transitions.fast};
-
-  &:hover {
-    background: rgba(244, 63, 94, 0.1);
-  }
-`;
-
-const MobileToggle = styled.button`
-  display: none;
-  color: ${({ theme }) => theme.colors.white};
-  padding: 8px;
-
-  @media (max-width: ${({ theme }) => theme.breakpoints.tablet}) {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-`;
-
-const MobileDrawer = styled.div`
-  display: none;
-  padding: 20px 24px 30px;
-  background: ${({ theme }) => theme.colors.bgSecondary};
-  border-top: 1px solid ${({ theme }) => theme.colors.border};
-
-  @media (max-width: ${({ theme }) => theme.breakpoints.tablet}) {
-    display: ${({ $open }) => ($open ? 'flex' : 'none')};
-    flex-direction: column;
-    gap: 16px;
-  }
-`;
-
-const MobileLink = styled(Link)`
-  font-size: 1.05rem;
-  font-weight: 600;
-  color: ${({ theme }) => theme.colors.text};
-  padding: 10px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-
-  &:hover {
-    color: ${({ theme }) => theme.colors.primary};
-  }
-`;
-
 export const Navbar = () => {
-  const { user, isAuthenticated, logout } = useAuth();
-  const [scrolled, setScrolled] = useState(false);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const { user, isAuthenticated, isAdmin, isStaff, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const dropdownRef = useRef(null);
   const location = useLocation();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  // Close dropdown on outside click
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-        setDropdownOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  // Close mobile drawer on route change
-  useEffect(() => {
-    setMobileMenuOpen(false);
-    setDropdownOpen(false);
-  }, [location.pathname]);
 
   const handleLogout = () => {
     logout();
     navigate('/');
   };
 
+  const getDashboardPath = () => {
+    if (isAdmin) return '/admin';
+    if (isStaff) return '/staff-dashboard';
+    return '/my-bookings';
+  };
+
+  const getDashboardLabel = () => {
+    if (isAdmin) return 'Admin Cockpit';
+    if (isStaff) return 'Staff Portal';
+    return 'My Bookings';
+  };
+
   return (
-    <Header $scrolled={scrolled}>
-      <NavContainer>
-        <LogoLink to="/">
-          <LogoIcon>
+    <header className="sticky top-0 z-50 bg-[#090d16]/80 backdrop-blur-xl border-b border-white/10 transition-all">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
+        {/* Brand Logo */}
+        <Link to="/" className="flex items-center gap-2.5 font-extrabold text-xl sm:text-2xl text-white tracking-tight">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-pink-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30">
             <Sparkles size={20} />
-          </LogoIcon>
-          Lucky<span>Events</span>
-        </LogoLink>
-
-        <NavLinks>
-          <NavItem to="/events" $active={location.pathname === '/events'}>
-            Explore Events
-          </NavItem>
-          <NavItem to="/#features">Features</NavItem>
-          <NavItem to="/#pricing">Pricing</NavItem>
-          <NavItem to="/#faq">FAQ</NavItem>
-        </NavLinks>
-
-        <ActionsContainer>
-          {isAuthenticated ? (
-            <>
-              <CreateBtn to="/create-event">
-                <PlusCircle size={18} />
-                Create Event
-              </CreateBtn>
-
-              <UserMenuWrapper ref={dropdownRef}>
-                <UserAvatarBtn onClick={() => setDropdownOpen(!dropdownOpen)}>
-                  <img
-                    src={
-                      user.avatar ||
-                      `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(
-                        user.name
-                      )}`
-                    }
-                    alt={user.name}
-                  />
-                  <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>
-                    {user.name.split(' ')[0]}
-                  </span>
-                  <ChevronDown size={14} />
-                </UserAvatarBtn>
-
-                {dropdownOpen && (
-                  <DropdownMenu>
-                    <UserInfoBlock>
-                      <div className="name">{user.name}</div>
-                      <div className="email">{user.email}</div>
-                    </UserInfoBlock>
-
-                    <DropdownItem to="/dashboard">
-                      <LayoutDashboard size={16} />
-                      Dashboard
-                    </DropdownItem>
-                    <DropdownItem to="/dashboard?tab=rsvps">
-                      <Ticket size={16} />
-                      My RSVPs
-                    </DropdownItem>
-                    <DropdownItem to="/profile">
-                      <User size={16} />
-                      Profile Settings
-                    </DropdownItem>
-
-                    <div
-                      style={{
-                        height: 1,
-                        background: 'rgba(255,255,255,0.08)',
-                        margin: '6px 0',
-                      }}
-                    />
-
-                    <DropdownButton onClick={handleLogout}>
-                      <LogOut size={16} />
-                      Log Out
-                    </DropdownButton>
-                  </DropdownMenu>
-                )}
-              </UserMenuWrapper>
-            </>
-          ) : (
-            <>
-              <LoginBtn to="/login">Sign In</LoginBtn>
-              <SignupBtn to="/signup">Get Started Free</SignupBtn>
-            </>
-          )}
-        </ActionsContainer>
-
-        <MobileToggle
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          aria-label="Toggle navigation menu"
-        >
-          {mobileMenuOpen ? <X size={26} /> : <Menu size={26} />}
-        </MobileToggle>
-      </NavContainer>
-
-      <MobileDrawer $open={mobileMenuOpen}>
-        <MobileLink to="/events">Explore Events</MobileLink>
-        <MobileLink to="/#features">Features</MobileLink>
-        <MobileLink to="/#pricing">Pricing</MobileLink>
-        <MobileLink to="/#faq">FAQ</MobileLink>
-
-        {isAuthenticated ? (
-          <>
-            <MobileLink to="/create-event" style={{ color: '#6366f1' }}>
-              + Create Event
-            </MobileLink>
-            <MobileLink to="/dashboard">Dashboard</MobileLink>
-            <MobileLink to="/dashboard?tab=rsvps">My RSVPs</MobileLink>
-            <MobileLink to="/profile">Profile Settings</MobileLink>
-            <MobileLink
-              as="button"
-              onClick={handleLogout}
-              style={{ color: '#f43f5e', textAlign: 'left' }}
-            >
-              Log Out
-            </MobileLink>
-          </>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 10 }}>
-            <Link
-              to="/login"
-              style={{
-                textAlign: 'center',
-                padding: '12px',
-                borderRadius: 8,
-                background: 'rgba(255,255,255,0.06)',
-                fontWeight: 600,
-              }}
-            >
-              Sign In
-            </Link>
-            <Link
-              to="/signup"
-              style={{
-                textAlign: 'center',
-                padding: '12px',
-                borderRadius: 8,
-                background: '#6366f1',
-                color: '#fff',
-                fontWeight: 600,
-              }}
-            >
-              Get Started Free
-            </Link>
           </div>
-        )}
-      </MobileDrawer>
-    </Header>
+          <span>Lucky<span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-pink-400">Events</span></span>
+        </Link>
+
+        {/* Desktop Navigation */}
+        <nav className="hidden md:flex items-center gap-8">
+          <Link
+            to="/categories"
+            className={`text-sm font-semibold transition-colors ${
+              location.pathname === '/categories' ? 'text-indigo-400' : 'text-slate-300 hover:text-white'
+            }`}
+          >
+            Event Categories
+          </Link>
+          <Link
+            to="/services"
+            className={`text-sm font-semibold transition-colors ${
+              location.pathname === '/services' ? 'text-indigo-400' : 'text-slate-300 hover:text-white'
+            }`}
+          >
+            Add-on Services
+          </Link>
+          <Link
+            to="/book"
+            className={`text-sm font-semibold transition-colors ${
+              location.pathname === '/book' ? 'text-indigo-400' : 'text-slate-300 hover:text-white'
+            }`}
+          >
+            Booking Wizard
+          </Link>
+        </nav>
+
+        {/* Actions & User Profile */}
+        <div className="hidden md:flex items-center gap-4">
+          {isAuthenticated ? (
+            <div className="flex items-center gap-3">
+              <Link
+                to={getDashboardPath()}
+                className="flex items-center gap-2 bg-indigo-600/20 border border-indigo-500/40 text-indigo-300 hover:bg-indigo-600 hover:text-white px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all"
+              >
+                {isAdmin ? <ShieldAlert size={14} /> : isStaff ? <Briefcase size={14} /> : <Ticket size={14} />}
+                {getDashboardLabel()}
+              </Link>
+
+              <div className="flex items-center gap-2 text-sm text-slate-300 bg-white/5 border border-white/10 px-3 py-1.5 rounded-full">
+                <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+                <span className="font-semibold text-white">{user.name.split(' ')[0]}</span>
+                <span className="text-[10px] uppercase font-bold text-slate-400 bg-white/10 px-1.5 py-0.5 rounded">
+                  {user.role}
+                </span>
+              </div>
+
+              <button
+                onClick={handleLogout}
+                className="p-2 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-full transition-colors"
+                title="Log out"
+              >
+                <LogOut size={18} />
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-3">
+              <Link
+                to="/login"
+                className="text-sm font-semibold text-slate-200 hover:text-white px-3 py-1.5 rounded-lg transition-colors"
+              >
+                Sign In
+              </Link>
+              <Link
+                to="/book"
+                className="bg-gradient-to-r from-indigo-500 to-pink-500 hover:from-indigo-600 hover:to-pink-600 text-white font-bold text-sm px-4 py-2 rounded-full shadow-md shadow-indigo-500/30 transition-transform hover:-translate-y-0.5 flex items-center gap-1.5"
+              >
+                <PlusCircle size={16} /> Book Event
+              </Link>
+            </div>
+          )}
+        </div>
+
+        {/* Mobile menu toggle */}
+        <button
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="md:hidden text-slate-300 hover:text-white p-2"
+          aria-label="Toggle menu"
+        >
+          {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
+      </div>
+
+      {/* Mobile Drawer */}
+      {mobileMenuOpen && (
+        <div className="md:hidden bg-[#0f172a] border-b border-white/10 px-4 py-6 space-y-4">
+          <Link
+            to="/categories"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block text-slate-200 font-medium py-1"
+          >
+            Event Categories
+          </Link>
+          <Link
+            to="/services"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block text-slate-200 font-medium py-1"
+          >
+            Add-on Services
+          </Link>
+          <Link
+            to="/book"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block text-indigo-400 font-bold py-1"
+          >
+            Booking Wizard
+          </Link>
+
+          {isAuthenticated ? (
+            <div className="pt-4 border-t border-white/10 space-y-3">
+              <Link
+                to={getDashboardPath()}
+                onClick={() => setMobileMenuOpen(false)}
+                className="block text-indigo-300 font-bold"
+              >
+                {getDashboardLabel()} ({user.role})
+              </Link>
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  handleLogout();
+                }}
+                className="block text-rose-400 font-semibold text-sm"
+              >
+                Log Out ({user.name})
+              </button>
+            </div>
+          ) : (
+            <div className="pt-4 border-t border-white/10 flex flex-col gap-2">
+              <Link
+                to="/login"
+                onClick={() => setMobileMenuOpen(false)}
+                className="text-center py-2 rounded-lg bg-white/5 font-semibold text-white"
+              >
+                Sign In
+              </Link>
+              <Link
+                to="/register"
+                onClick={() => setMobileMenuOpen(false)}
+                className="text-center py-2 rounded-lg bg-indigo-600 font-semibold text-white"
+              >
+                Register
+              </Link>
+            </div>
+          )}
+        </div>
+      )}
+    </header>
   );
 };

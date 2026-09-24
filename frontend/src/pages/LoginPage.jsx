@@ -1,191 +1,7 @@
 import React, { useState } from 'react';
-import styled from 'styled-components';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Mail, Lock, Eye, EyeOff, Sparkles, ArrowRight, ShieldCheck, UserCheck } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, Sparkles, ArrowRight, ShieldCheck, UserCheck, Calendar } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-
-const PageWrapper = styled.div`
-  min-height: calc(100vh - 150px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 40px 20px;
-`;
-
-const AuthCard = styled.div`
-  width: 100%;
-  max-width: 480px;
-  background: ${({ theme }) => theme.colors.bgSecondary};
-  border: 1px solid ${({ theme }) => theme.colors.borderLight};
-  border-radius: ${({ theme }) => theme.radii.xl};
-  padding: 40px;
-  box-shadow: ${({ theme }) => theme.shadows.xl};
-
-  @media (max-width: ${({ theme }) => theme.breakpoints.mobile}) {
-    padding: 28px 20px;
-  }
-`;
-
-const Header = styled.div`
-  text-align: center;
-  margin-bottom: 32px;
-
-  h1 {
-    font-size: 2rem;
-    font-weight: 800;
-    margin-bottom: 8px;
-  }
-
-  p {
-    color: ${({ theme }) => theme.colors.textSecondary};
-    font-size: 0.95rem;
-  }
-`;
-
-const QuickLogins = styled.div`
-  margin-bottom: 24px;
-  padding: 16px;
-  border-radius: ${({ theme }) => theme.radii.lg};
-  background: rgba(99, 102, 241, 0.08);
-  border: 1px dashed rgba(99, 102, 241, 0.3);
-
-  .label {
-    font-size: 0.78rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    color: #a5b4fc;
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .btn-group {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-
-  button {
-    flex: 1;
-    min-width: 110px;
-    padding: 8px 12px;
-    border-radius: ${({ theme }) => theme.radii.md};
-    background: rgba(255, 255, 255, 0.07);
-    color: #fff;
-    font-size: 0.8rem;
-    font-weight: 600;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    transition: ${({ theme }) => theme.transitions.fast};
-
-    &:hover {
-      background: ${({ theme }) => theme.colors.primary};
-      border-color: ${({ theme }) => theme.colors.primary};
-    }
-  }
-`;
-
-const Form = styled.form`
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-`;
-
-const FormGroup = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-
-  label {
-    font-size: 0.88rem;
-    font-weight: 600;
-    color: ${({ theme }) => theme.colors.text};
-  }
-`;
-
-const InputWrapper = styled.div`
-  position: relative;
-  display: flex;
-  align-items: center;
-
-  .input-icon {
-    position: absolute;
-    left: 14px;
-    color: ${({ theme }) => theme.colors.textMuted};
-  }
-
-  input {
-    width: 100%;
-    padding: 13px 16px 13px 44px;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid ${({ theme }) => theme.colors.border};
-    border-radius: ${({ theme }) => theme.radii.md};
-    color: ${({ theme }) => theme.colors.white};
-    font-size: 0.95rem;
-    outline: none;
-    transition: ${({ theme }) => theme.transitions.fast};
-
-    &:focus {
-      border-color: ${({ theme }) => theme.colors.primary};
-      box-shadow: 0 0 10px rgba(99, 102, 241, 0.3);
-      background: rgba(255, 255, 255, 0.06);
-    }
-  }
-
-  .toggle-btn {
-    position: absolute;
-    right: 14px;
-    color: ${({ theme }) => theme.colors.textMuted};
-    padding: 4px;
-
-    &:hover {
-      color: #fff;
-    }
-  }
-`;
-
-const SubmitButton = styled.button`
-  margin-top: 10px;
-  padding: 14px;
-  border-radius: ${({ theme }) => theme.radii.lg};
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-  color: #ffffff;
-  font-weight: 700;
-  font-size: 1rem;
-  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
-  transition: ${({ theme }) => theme.transitions.fast};
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-
-  &:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6);
-  }
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-`;
-
-const FooterText = styled.p`
-  text-align: center;
-  margin-top: 24px;
-  font-size: 0.9rem;
-  color: ${({ theme }) => theme.colors.textSecondary};
-
-  a {
-    color: ${({ theme }) => theme.colors.primary};
-    font-weight: 600;
-
-    &:hover {
-      text-decoration: underline;
-    }
-  }
-`;
 
 export const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -197,7 +13,10 @@ export const LoginPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const from = location.state?.from?.pathname || '/dashboard';
+  const handleFillDemo = (demoEmail, demoPass) => {
+    setEmail(demoEmail);
+    setPassword(demoPass);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -208,96 +27,136 @@ export const LoginPage = () => {
     setSubmitting(false);
 
     if (result?.success) {
-      navigate(from, { replace: true });
+      const loggedUser = result.user;
+      const customFrom = location.state?.from?.pathname;
+      if (customFrom && customFrom !== '/login' && customFrom !== '/register') {
+        navigate(customFrom, { replace: true });
+      } else if (loggedUser.role === 'admin') {
+        navigate('/admin', { replace: true });
+      } else if (loggedUser.role === 'staff') {
+        navigate('/staff-dashboard', { replace: true });
+      } else {
+        navigate('/my-bookings', { replace: true });
+      }
     }
   };
 
-  const handleFillDemo = (demoEmail, demoPass) => {
-    setEmail(demoEmail);
-    setPassword(demoPass);
-  };
-
   return (
-    <PageWrapper>
-      <AuthCard>
-        <Header>
-          <h1>Welcome Back</h1>
-          <p>Sign in to orchestrate your events or view RSVP passes</p>
-        </Header>
-
-        <QuickLogins>
-          <div className="label">
-            <Sparkles size={14} /> 1-Click Demo Accounts:
+    <div className="min-h-[calc(100vh-140px)] flex items-center justify-center px-4 py-12 bg-slate-950">
+      <div className="w-full max-w-md bg-slate-900/90 border border-slate-800 rounded-3xl p-8 sm:p-10 shadow-2xl backdrop-blur-md">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="inline-flex p-3 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 mb-4">
+            <Sparkles className="w-7 h-7" />
           </div>
-          <div className="btn-group">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+            Welcome to LuckyEvents
+          </h1>
+          <p className="text-slate-400 text-sm mt-2">
+            Sign in to book events, track schedules, or coordinate staff
+          </p>
+        </div>
+
+        {/* 1-Click Demo Logins */}
+        <div className="mb-6 p-4 rounded-2xl bg-indigo-950/40 border border-indigo-800/40">
+          <div className="flex items-center gap-1.5 text-xs font-bold text-indigo-400 uppercase tracking-wider mb-2.5">
+            <Sparkles className="w-3.5 h-3.5" /> 1-Click Role Accounts
+          </div>
+          <div className="grid grid-cols-3 gap-2">
             <button
               type="button"
-              onClick={() => handleFillDemo('admin@luckyevents.com', 'password123')}
+              onClick={() => handleFillDemo('admin@luckyevents.com', 'admin123')}
+              className="px-2 py-2 rounded-xl bg-slate-800/80 hover:bg-indigo-600 hover:text-white border border-slate-700/60 text-xs font-semibold text-slate-200 transition flex flex-col items-center gap-1"
             >
-              Admin (Eleanor)
+              <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+              <span>Admin</span>
             </button>
             <button
               type="button"
-              onClick={() => handleFillDemo('sarah@luckyevents.com', 'password123')}
+              onClick={() => handleFillDemo('staff@luckyevents.com', 'staff123')}
+              className="px-2 py-2 rounded-xl bg-slate-800/80 hover:bg-indigo-600 hover:text-white border border-slate-700/60 text-xs font-semibold text-slate-200 transition flex flex-col items-center gap-1"
             >
-              Organizer (Sarah)
+              <UserCheck className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Staff</span>
             </button>
             <button
               type="button"
-              onClick={() => handleFillDemo('alex@luckyevents.com', 'password123')}
+              onClick={() => handleFillDemo('customer@luckyevents.com', 'customer123')}
+              className="px-2 py-2 rounded-xl bg-slate-800/80 hover:bg-indigo-600 hover:text-white border border-slate-700/60 text-xs font-semibold text-slate-200 transition flex flex-col items-center gap-1"
             >
-              Attendee (Alex)
+              <Calendar className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Customer</span>
             </button>
           </div>
-        </QuickLogins>
+        </div>
 
-        <Form onSubmit={handleSubmit}>
-          <FormGroup>
-            <label>Email Address</label>
-            <InputWrapper>
-              <Mail size={18} className="input-icon" />
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+              Email Address
+            </label>
+            <div className="relative">
+              <Mail className="absolute left-3.5 top-3.5 w-4 h-4 text-slate-500" />
               <input
                 type="email"
-                placeholder="name@example.com"
+                required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                required
+                placeholder="name@example.com"
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition"
               />
-            </InputWrapper>
-          </FormGroup>
+            </div>
+          </div>
 
-          <FormGroup>
-            <label>Password</label>
-            <InputWrapper>
-              <Lock size={18} className="input-icon" />
+          <div>
+            <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+              Password
+            </label>
+            <div className="relative">
+              <Lock className="absolute left-3.5 top-3.5 w-4 h-4 text-slate-500" />
               <input
                 type={showPassword ? 'text' : 'password'}
-                placeholder="••••••••"
+                required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                required
+                placeholder="••••••••"
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-10 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition"
               />
               <button
                 type="button"
-                className="toggle-btn"
                 onClick={() => setShowPassword(!showPassword)}
-                aria-label="Toggle password visibility"
+                className="absolute right-3.5 top-3.5 text-slate-500 hover:text-slate-300 transition"
               >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
-            </InputWrapper>
-          </FormGroup>
+            </div>
+          </div>
 
-          <SubmitButton type="submit" disabled={submitting}>
-            {submitting ? 'Authenticating...' : 'Sign In'}
-            <ArrowRight size={18} />
-          </SubmitButton>
-        </Form>
+          <button
+            type="submit"
+            disabled={submitting}
+            className="w-full mt-2 py-3.5 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold text-sm shadow-lg shadow-indigo-600/25 transition disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {submitting ? (
+              <span>Authenticating...</span>
+            ) : (
+              <>
+                <span>Sign In to Account</span>
+                <ArrowRight className="w-4 h-4" />
+              </>
+            )}
+          </button>
+        </form>
 
-        <FooterText>
-          Don't have an account yet? <Link to="/signup">Create one for free</Link>
-        </FooterText>
-      </AuthCard>
-    </PageWrapper>
+        {/* Footer */}
+        <p className="text-center text-xs text-slate-400 mt-6">
+          Don't have an account?{' '}
+          <Link to="/register" className="text-indigo-400 hover:text-indigo-300 font-semibold underline">
+            Register as Customer
+          </Link>
+        </p>
+      </div>
+    </div>
   );
 };

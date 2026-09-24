@@ -1,7 +1,6 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
-// Helper to generate JWT token
 const generateToken = (id) => {
   return jwt.sign(
     { id },
@@ -12,15 +11,28 @@ const generateToken = (id) => {
   );
 };
 
-// @desc    Register a new user
-// @route   POST /api/auth/register
+// @desc    Register a new customer
+// @route   POST /auth/register
 // @access  Public
 const register = async (req, res, next) => {
   try {
-    const { name, email, password, role, organization, bio } = req.body;
+    const { name, email, password, phone } = req.body;
 
-    // Check if user already exists
-    const existingUser = await User.findOne({ email });
+    if (!name || !email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide name, email, and password.',
+      });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password must be at least 6 characters long.',
+      });
+    }
+
+    const existingUser = await User.findOne({ email: email.toLowerCase() });
     if (existingUser) {
       return res.status(400).json({
         success: false,
@@ -28,36 +40,28 @@ const register = async (req, res, next) => {
       });
     }
 
-    // Generate avatar initials or seed
-    const defaultAvatar = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(
-      name
-    )}&backgroundColor=6366f1,8b5cf6,ec4899`;
+    const passwordHash = await User.hashPassword(password);
 
-    // Create user
     const user = await User.create({
       name,
-      email,
-      password,
-      role: role === 'admin' ? 'admin' : 'user',
-      organization: organization || '',
-      bio: bio || '',
-      avatar: defaultAvatar,
+      email: email.toLowerCase(),
+      passwordHash,
+      phone: phone || '',
+      role: 'customer', // Self-registration defaults to customer
     });
 
     const token = generateToken(user._id);
 
     res.status(201).json({
       success: true,
-      message: 'Account created successfully!',
+      message: 'Account registered successfully!',
       token,
       user: {
         id: user._id,
         name: user.name,
         email: user.email,
+        phone: user.phone,
         role: user.role,
-        avatar: user.avatar,
-        organization: user.organization,
-        bio: user.bio,
       },
     });
   } catch (error) {
@@ -66,7 +70,7 @@ const register = async (req, res, next) => {
 };
 
 // @desc    Authenticate user & get token
-// @route   POST /api/auth/login
+// @route   POST /auth/login
 // @access  Public
 const login = async (req, res, next) => {
   try {
@@ -79,8 +83,7 @@ const login = async (req, res, next) => {
       });
     }
 
-    // Check user exists with password field selected
-    const user = await User.findOne({ email }).select('+password');
+    const user = await User.findOne({ email: email.toLowerCase() }).select('+passwordHash');
     if (!user) {
       return res.status(401).json({
         success: false,
@@ -88,7 +91,6 @@ const login = async (req, res, next) => {
       });
     }
 
-    // Verify password match
     const isMatch = await user.matchPassword(password);
     if (!isMatch) {
       return res.status(401).json({
@@ -107,10 +109,8 @@ const login = async (req, res, next) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        phone: user.phone,
         role: user.role,
-        avatar: user.avatar,
-        organization: user.organization,
-        bio: user.bio,
       },
     });
   } catch (error) {
@@ -118,8 +118,8 @@ const login = async (req, res, next) => {
   }
 };
 
-// @desc    Get current logged in user
-// @route   GET /api/auth/me
+// @desc    Get current user profile
+// @route   GET /auth/me
 // @access  Private
 const getMe = async (req, res, next) => {
   try {
@@ -130,10 +130,8 @@ const getMe = async (req, res, next) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        phone: user.phone,
         role: user.role,
-        avatar: user.avatar,
-        organization: user.organization,
-        bio: user.bio,
         createdAt: user.createdAt,
       },
     });

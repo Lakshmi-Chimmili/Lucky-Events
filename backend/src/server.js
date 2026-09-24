@@ -4,16 +4,12 @@ const morgan = require('morgan');
 const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 const { errorHandler, notFound } = require('./middleware/errorMiddleware');
-const { initReminderScheduler } = require('./services/reminderScheduler');
 
 // Load environment variables
 dotenv.config();
 
 // Connect to MongoDB
 connectDB();
-
-// Initialize background tasks & automated reminders
-initReminderScheduler();
 
 const app = express();
 
@@ -41,35 +37,58 @@ if (process.env.NODE_ENV !== 'test') {
 }
 
 // Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'online',
+    app: 'Event Management Booking Platform API',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+  });
+});
 app.get('/api/health', (req, res) => {
   res.status(200).json({
     status: 'online',
-    app: 'LuckyEvents API',
+    app: 'Event Management Booking Platform API',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
   });
 });
 
-// Mount Routes
-app.use('/api/auth', require('./routes/authRoutes'));
-app.use('/api/users', require('./routes/userRoutes'));
-app.use('/api/events', require('./routes/eventRoutes'));
-app.use('/api/rsvps', require('./routes/rsvpRoutes'));
+// Route imports
+const authRoutes = require('./routes/authRoutes');
+const categoryRoutes = require('./routes/categoryRoutes');
+const serviceRoutes = require('./routes/serviceRoutes');
+const bookingRoutes = require('./routes/bookingRoutes');
+const staffRoutes = require('./routes/staffRoutes');
 
-// 404 & Centralized Error Handlers
+// Mount routes (supporting both /api/* and root paths)
+app.use('/auth', authRoutes);
+app.use('/api/auth', authRoutes);
+
+app.use('/categories', categoryRoutes);
+app.use('/api/categories', categoryRoutes);
+
+app.use('/services', serviceRoutes);
+app.use('/api/services', serviceRoutes);
+
+app.use('/bookings', bookingRoutes);
+app.use('/api/bookings', bookingRoutes);
+
+app.use('/staff', staffRoutes);
+app.use('/api/staff', staffRoutes);
+
+// Error handlers
 app.use(notFound);
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 
 const server = app.listen(PORT, () => {
-  console.log(`[LuckyEvents Backend] Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+  console.log(`[Server] Event Management Booking API running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
 });
 
-// Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
   console.error(`Unhandled Rejection: ${err.message}`);
-  // server.close(() => process.exit(1));
 });
 
 module.exports = app;

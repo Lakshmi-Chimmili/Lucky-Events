@@ -1,250 +1,243 @@
-# Lucky-Events &bull; Modern Full-Stack Event Management & RSVP Platform
+# LuckyEvents &bull; Event Management Booking Platform (MERN)
 
-A modern, full-stack SaaS event management and RSVP web application built with **ReactJS (Vite)**, **Styled-Components**, **ExpressJS**, and **MongoDB (Mongoose)**.
+A production-ready full-stack Event Management Booking Platform built with the **MERN stack** (MongoDB, Express, React, Node.js) and Tailwind CSS.
 
-Designed with rich aesthetics, glassmorphic dark theme, responsive navigation, digital ticket pass generation, automated background email reminders, and robust role-based access control.
-
----
-
-## 🌟 Key Highlights & Features
-
-### 🖥️ Frontend (ReactJS + Styled-Components + Vite)
-- **Responsive SaaS Landing Page:**
-  - **Hero Section:** High-converting gradient headlines, floating stats cards, and dual call-to-actions.
-  - **Curated Live Summits Showcase:** Real-time event cards directly from the database.
-  - **Feature Bento Grid:** Highlights 1-click RSVP, automated reminders, dynamic capacity, and security.
-  - **SaaS Pricing Cards:** Monthly and Annual billing toggle with 20% discount badge.
-  - **Customer Testimonials & Star Ratings:** Authentic organizer and attendee reviews.
-  - **Interactive FAQ Accordion:** Expandable answers for common questions.
-- **Events Explorer & Discovery:**
-  - Real-time search across event titles, descriptions, and locations.
-  - Category pill filter tabs (*Technology, Business, Design, Marketing, Networking, Health & Wellness*).
-  - Ticket type filtering (*All, Free, Paid*) and multiple sort orders (*Date, Popularity, Newest, Price*).
-  - Numbered pagination.
-- **Event Details & Interactive RSVP:**
-  - Cover banner with category and price badges.
-  - Live capacity progress bar and remaining seat counter.
-  - **1-Click RSVP Booking Widget** with guest count selector (1–5 guests) and organizer notes.
-  - **Confetti Celebration & Instant Digital Ticket Pass** modal with unique ticket barcode/code.
-  - Safe RSVP cancellation modal releasing seats back to capacity.
-  - Organizer controls (*Edit Event, Delete Event, Broadcast Reminders, View Attendee Roster*).
-  - Virtual meeting link reveals securely to confirmed attendees.
-- **Creator Dashboard:**
-  - KPI overview metrics (*Events Hosted, Total Attendees Registered, Active Reservations*).
-  - "Events I'm Organizing" management table with direct view, edit, delete, and reminder actions.
-  - "My RSVPs & Ticket Passes" cards with ticket codes, date, location, and quick cancellation.
-- **Event Creation & Editing:**
-  - Rich form with presets cover gallery, category picker, datetime-local pickers, venue vs virtual toggles, capacity limits, and pricing.
-- **Profile & Security Settings:**
-  - Profile details editor (name, organization, bio, custom avatar URL).
-  - Password change with bcrypt security.
-- **Authentication Pages:**
-  - Split-screen design for Sign In and Sign Up.
-  - **1-Click Demo Login Buttons** (*Admin Eleanor, Organizer Sarah, Attendee Alex*) for instant testing.
+LuckyEvents supplies professional staff and on-site event managers to plan and run **Birthday Parties**, **Weddings & Receptions**, **Corporate & Professional Summits**, and **Family Functions**. Customers book online with real-time transparent price estimates, while an authoritative server-side pricing engine recomputes and freezes all calculations.
 
 ---
 
-### ⚙️ Backend (ExpressJS + MongoDB + Nodemailer + Cron)
-- **RESTful API Architecture:**
-  - Clean MVC controller structure (`controllers/`, `routes/`, `models/`, `middleware/`, `services/`).
-- **User Authentication & Role-Based Access Control (RBAC):**
-  - Secure password hashing using `bcryptjs` (salt rounds: 10).
-  - Stateless JSON Web Tokens (`jsonwebtoken`) with 30-day expiry.
-  - Roles: `user` and `admin`. Event ownership verification for updates and deletions.
-- **Data Persistence (MongoDB & Mongoose):**
-  - **User Model:** Name, email, hashed password, role, avatar, bio, organization.
-  - **Event Model:** Title, description, category, dates, time, virtual/in-person, location, capacity, ticket type, price, banner, tags, and virtual getters (`availableSeats`, `isSoldOut`).
-  - **RSVP Model:** Event ID, User ID, guest count, ticket code (`TKT-XXXXXX`), status (`attending`, `waitlist`, `cancelled`), unique compound index preventing duplicate active registrations.
-- **Automated & Manual Email Notifications:**
-  - `Nodemailer` integration with responsive HTML email templates:
-    1. **RSVP Confirmation:** Branded email with digital ticket pass, event details, and add-to-calendar link.
-    2. **Event Reminders:** Dispatched automatically **24 hours prior** to event start via background cron scheduler (`node-cron`).
-    3. **RSVP Cancellation:** Notification confirming seat release.
-    4. **Manual Reminder Broadcast:** Organizers can trigger instant attendee notification broadcasts from the UI.
-  - Automatic Ethereal fallback: generates instant preview URLs in console if custom SMTP credentials are not configured.
-- **Centralized Error Handling & Input Validation:**
-  - `express-validator` middleware for route-level schema validation.
-  - Centralized global error handler capturing Mongoose duplicate keys, validation errors, and invalid ObjectIDs.
-- **Pagination & Query Optimization:**
-  - Server-side text search and indexing for high-performance filtering.
+## 🎯 Architecture & Hard Constraints (Non-Negotiable)
+
+1. **Server-Side Price Authority:**
+   - Every booking write recomputes and validates the price on the server (`computeBookingPrice`). Client-sent totals are strictly ignored.
+2. **Frozen Snapshot on Creation:**
+   - The full price breakdown (`categoryTotal`, `addOnsBreakdown`, `addOnsTotal`, `grandTotal`) is frozen into the `Booking` document at creation time. Subsequent price changes by Admin do not alter historical bookings.
+3. **Database-Driven Catalog:**
+   - Categories and Add-on Services live entirely in MongoDB and are dynamically managed via the Admin Dashboard. No categories or services are hardcoded in frontend components.
+4. **Role-Based Access Control (RBAC):**
+   - Every write route and private view sits behind `authMiddleware` and `roleMiddleware` (`admin`, `staff`, `customer`).
+   - Passwords are encrypted with `bcryptjs`.
+   - Secrets are managed via `.env`.
 
 ---
 
-## 🗂️ Project Directory Structure
+## 📐 Pricing Engine Formula & Worked Example
 
-```text
+$$\text{categoryTotal} = \text{category.basePricePerAttendee} \times \text{attendeeCount}$$
+
+$$\text{addOnsTotal} = \sum \text{addon.price (flat)} + \sum \left(\text{addon.price} \times \text{attendeeCount}\right) \text{ (perAttendee)}$$
+
+$$\text{grandTotal} = \text{categoryTotal} + \text{addOnsTotal}$$
+
+### ✅ Worked Example (Self-Checked & Verified)
+- **Category:** Wedding/Marriage (`₹1,500` / attendee)
+- **Attendees:** `100` attendees
+- **Add-on 1:** Catering (`perAttendee`, `₹300` / attendee)
+- **Add-on 2:** DJ & Music (`flat`, `₹8,000`)
+- **Calculations:**
+  - $\text{categoryTotal} = 1500 \times 100 = ₹150,000$
+  - $\text{addOnsTotal} = (300 \times 100) + 8000 = 30,000 + 8,000 = ₹38,000$
+  - $\mathbf{grandTotal} = 150,000 + 38,000 = \mathbf{₹188,000}$
+
+---
+
+## 👥 User Roles & Permissions
+
+| Role | Permissions & Capabilities |
+| :--- | :--- |
+| **Admin** | Full CRUD on Categories, Add-on Services, and Staff Accounts. Review, confirm, or reject all bookings. Assign staff members to bookings. Access aggregate analytics & revenue stats. |
+| **Staff / Manager** | Sees **only** bookings assigned to their account. Views on-site event details, venue address, notes, and client contact. Updates assignment status (`assigned`, `confirmed`, `completed`). |
+| **Customer** | Browses event categories & services. Books via 4-step wizard with real-time price preview. Tracks personal bookings. Cancels bookings while status is `pending` or `confirmed`. |
+
+---
+
+## 📁 Project Folder Structure
+
+```
 luckyevents/
 ├── backend/
 │   ├── src/
 │   │   ├── config/
-│   │   │   └── db.js                 # MongoDB connection
+│   │   │   └── db.js                 # MongoDB connection & reconnect logic
 │   │   ├── controllers/
-│   │   │   ├── authController.js     # Register, Login, Me
-│   │   │   ├── eventController.js    # Event CRUD, Search, Pagination
-│   │   │   ├── rsvpController.js     # RSVP, Waitlist, Attendees Roster
-│   │   │   └── userController.js     # Profile, Password, Stats
+│   │   │   ├── authController.js     # Register, login, getMe
+│   │   │   ├── categoryController.js # CRUD for event categories
+│   │   │   ├── serviceController.js  # CRUD for add-on services
+│   │   │   ├── staffController.js    # Staff accounts management
+│   │   │   └── bookingController.js  # Server-priced bookings & assignment
 │   │   ├── middleware/
-│   │   │   ├── authMiddleware.js     # JWT & RBAC verification
-│   │   │   ├── errorMiddleware.js    # Global error handler & 404
-│   │   │   └── validateMiddleware.js # express-validator results
+│   │   │   ├── authMiddleware.js     # JWT verification & role-based guard
+│   │   │   └── errorMiddleware.js    # Centralized error handler
 │   │   ├── models/
-│   │   │   ├── User.js               # User schema & bcrypt hook
-│   │   │   ├── Event.js              # Event schema, indexes & virtuals
-│   │   │   └── RSVP.js               # RSVP schema & unique compound index
+│   │   │   ├── User.js               # Admin, Staff, Customer schema
+│   │   │   ├── Category.js           # Category schema (rate/attendee)
+│   │   │   ├── Service.js            # Add-on schema (flat / perAttendee)
+│   │   │   └── Booking.js            # Booking schema with frozen priceBreakdown
 │   │   ├── routes/
 │   │   │   ├── authRoutes.js
-│   │   │   ├── eventRoutes.js
-│   │   │   ├── rsvpRoutes.js
-│   │   │   └── userRoutes.js
-│   │   ├── services/
-│   │   │   ├── emailService.js       # Nodemailer HTML email templates
-│   │   │   └── reminderScheduler.js  # Node-cron background reminder job
+│   │   │   ├── categoryRoutes.js
+│   │   │   ├── serviceRoutes.js
+│   │   │   ├── staffRoutes.js
+│   │   │   └── bookingRoutes.js
 │   │   ├── utils/
-│   │   │   └── seedData.js           # Database seeder with realistic summits
-│   │   └── server.js                 # Express app bootstrap
-│   ├── .env                          # Backend environment variables
+│   │   │   ├── pricingEngine.js      # Authoritative pricing calculation engine
+│   │   │   ├── seedData.js           # Seed script (categories, services, users)
+│   │   │   ├── comprehensiveTest.js  # End-to-end automated verification suite
+│   │   │   └── testCustomerCancel.js # Customer cancellation test suite
+│   │   └── server.js                 # Express server bootstrap
 │   ├── .env.example
 │   └── package.json
-├── frontend/
-│   ├── src/
-│   │   ├── api/
-│   │   │   └── client.js             # Fetch wrapper with auto-auth headers
-│   │   ├── components/
-│   │   │   ├── EventCard.jsx         # Card with progress bar & tags
-│   │   │   ├── Footer.jsx            # SaaS footer with newsletter form
-│   │   │   ├── LoadingSpinner.jsx    # Animated spinner
-│   │   │   ├── Modal.jsx             # Accessible backdrop dialog
-│   │   │   ├── Navbar.jsx            # Sticky blurred glass navbar
-│   │   │   ├── Pagination.jsx        # Numbered pagination controls
-│   │   │   ├── ProtectedRoute.jsx    # Auth route guard
-│   │   │   ├── StatCard.jsx          # Dashboard KPI metric box
-│   │   │   └── Toast.jsx             # Floating notification toast
-│   │   ├── context/
-│   │   │   └── AuthContext.jsx       # Global auth state & toast provider
-│   │   ├── pages/
-│   │   │   ├── CreateEventPage.jsx   # Event publishing form
-│   │   │   ├── DashboardPage.jsx     # Creator dashboard & ticket passes
-│   │   │   ├── EditEventPage.jsx     # Event editing form
-│   │   │   ├── EventDetailPage.jsx   # Full event view with RSVP widget
-│   │   │   ├── EventsExplorerPage.jsx# Search & category explorer
-│   │   │   ├── LandingPage.jsx       # SaaS landing page
-│   │   │   ├── LoginPage.jsx         # Sign in with 1-click demo buttons
-│   │   │   ├── ProfilePage.jsx       # User profile & password settings
-│   │   │   └── SignupPage.jsx        # User registration form
-│   │   ├── styles/
-│   │   │   ├── GlobalStyles.js       # Reset, background gradient meshes
-│   │   │   └── theme.js              # Tokens, colors, radii, shadows
-│   │   ├── App.jsx                   # Routes and providers assembly
-│   │   └── main.jsx
-│   ├── index.html                    # SEO tags & Google Fonts (Outfit & Plus Jakarta Sans)
-│   ├── vite.config.js                # Vite config with backend proxy (/api -> :5000)
-│   └── package.json
-├── package.json                      # Root scripts (dev, seed, install:all)
-└── README.md
+└── frontend/
+    ├── src/
+    │   ├── api/
+    │   │   └── axios.js              # Axios instance with auth interceptors
+    │   ├── components/
+    │   │   ├── Navbar.jsx            # Dynamic role-aware navigation
+    │   │   ├── Footer.jsx            # Platform footer with service links
+    │   │   ├── Toast.jsx             # Notification toasts
+    │   │   ├── LoadingSpinner.jsx    # Custom animated loading indicator
+    │   │   └── RoleProtectedRoute.jsx # Route barrier by role
+    │   ├── context/
+    │   │   └── AuthContext.jsx       # Global auth state & token management
+    │   ├── pages/
+    │   │   ├── HomePage.jsx          # Public landing page with pricing calculator
+    │   │   ├── CategoriesPage.jsx    # Live categories from DB
+    │   │   ├── CategoryDetailPage.jsx # Individual category & headcount calculator
+    │   │   ├── ServicesPage.jsx      # Add-on services catalog
+    │   │   ├── BookingWizardPage.jsx # 4-Step Booking Wizard with live preview
+    │   │   ├── LoginPage.jsx         # 1-Click demo logins for all 3 roles
+    │   │   ├── RegisterPage.jsx      # Customer registration
+    │   │   ├── CustomerDashboardPage.jsx # Customer booking history & cancellation
+    │   │   ├── StaffDashboardPage.jsx # Assigned event manager cockpit
+    │   │   └── AdminDashboardPage.jsx # Admin Command Center (CRUD + Assign + Stats)
+    │   ├── App.jsx                   # React Router assembly
+    │   ├── main.jsx                  # React DOM root
+    │   └── index.css                 # Tailwind CSS styles
+    ├── vite.config.js
+    └── package.json
 ```
 
 ---
 
-## 🚀 Quickstart Guide
+## 🔑 Pre-Seeded Test Credentials
+
+| Role | Email | Password | Access Area |
+| :--- | :--- | :--- | :--- |
+| **Admin** | `admin@luckyevents.com` | `admin123` | `/admin` |
+| **Staff / Manager** | `staff@luckyevents.com` | `staff123` | `/staff-dashboard` |
+| **Customer** | `customer@luckyevents.com` | `customer123` | `/my-bookings` |
+
+*Note: The Login page includes 1-Click buttons to instantly populate any of these test credentials.*
+
+---
+
+## 🛠️ Installation & Setup
 
 ### 1. Prerequisites
-- **Node.js** (v18 or v20+ recommended)
-- **MongoDB** running locally on default port `27017` (or MongoDB Atlas connection URI)
+- Node.js (v18 or higher)
+- MongoDB (Local or Atlas URI)
 
-### 2. Installation
-Install all dependencies in one command from the project root:
+### 2. Backend Setup
 ```bash
-npm run install:all
+cd backend
+npm install
 ```
-*(Or navigate into `backend/` and `frontend/` separately and run `npm install` in each).*
 
-### 3. Environment Configuration
-Check `backend/.env` (pre-configured with sensible development defaults):
+Create `backend/.env` (or copy from `.env.example`):
 ```env
 PORT=5000
 NODE_ENV=development
-MONGO_URI=mongodb://localhost:27017/luckyevents
-JWT_SECRET=super_secret_luckyevents_jwt_key_2026_modern_saas
-JWT_EXPIRE=30d
+MONGO_URI=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/luckyevents?retryWrites=true&w=majority
+JWT_SECRET=luckyevents_production_jwt_super_secret_key_2026_xyz
 CLIENT_URL=http://localhost:5173
-
-# Optional Custom SMTP settings (Ethereal test accounts used automatically if blank)
-SMTP_HOST=smtp.ethereal.email
-SMTP_PORT=587
-SMTP_USER=
-SMTP_PASS=
-EMAIL_FROM="LuckyEvents" <noreply@luckyevents.com>
 ```
 
-### 4. Seed Database with Realistic Data
-Populate demo accounts and high-quality summits, conferences, and RSVPs:
+### 3. Run Seed Script
+Populates the 4 event categories, 6 add-on services, and test users:
 ```bash
+cd backend
 npm run seed
 ```
 
-### 5. Start the Application
-Start both the backend server and frontend client simultaneously with:
+### 4. Run Automated Test Suites
+Verify the pricing engine against the worked example and confirm RBAC security:
 ```bash
+cd backend
+node src/utils/comprehensiveTest.js
+node src/utils/testCustomerCancel.js
+```
+
+### 5. Frontend Setup
+```bash
+cd ../frontend
+npm install
+```
+
+Create `frontend/.env`:
+```env
+VITE_API_URL=http://localhost:5000/api
+```
+
+---
+
+## 🚀 Running the Application Locally
+
+### Start Backend Dev Server (Port 5000)
+```bash
+cd backend
 npm run dev
 ```
 
-- **Frontend Application:** [http://localhost:5173](http://localhost:5173)
-- **Backend API Server:** [http://localhost:5000](http://localhost:5000)
-- **API Health Check:** [http://localhost:5000/api/health](http://localhost:5000/api/health)
-
----
-
-## 🔑 Demo User Credentials
-
-The database comes pre-seeded with 3 accounts. You can also click the **1-Click Demo Buttons** on the Login page:
-
-| Role | Name | Email | Password |
-| :--- | :--- | :--- | :--- |
-| **Admin** | Eleanor Vance | `admin@luckyevents.com` | `password123` |
-| **Organizer** | Sarah Jenkins | `sarah@luckyevents.com` | `password123` |
-| **Attendee** | Alex Rivera | `alex@luckyevents.com` | `password123` |
-
----
-
-## 📚 API Endpoints Overview
-
-### Authentication (`/api/auth`)
-- `POST /api/auth/register` &ndash; Create a new user account.
-- `POST /api/auth/login` &ndash; Authenticate user & return JWT token.
-- `GET /api/auth/me` &ndash; Get current logged-in user profile (*Private*).
-
-### Events (`/api/events`)
-- `GET /api/events` &ndash; Paginated list with search keyword, category, ticketType, sort.
-- `GET /api/events/featured` &ndash; Top featured events for the landing page.
-- `GET /api/events/user/my-events` &ndash; Events organized by the current user (*Private*).
-- `GET /api/events/:id` &ndash; Full event details, organizer info, recent attendees.
-- `POST /api/events` &ndash; Create an event (*Private*).
-- `PUT /api/events/:id` &ndash; Update an event (*Private, Organizer or Admin*).
-- `DELETE /api/events/:id` &ndash; Delete an event and cleanup RSVPs (*Private, Organizer or Admin*).
-- `POST /api/events/:id/send-reminders` &ndash; Trigger instant email reminder broadcast (*Private*).
-
-### RSVPs (`/api/events/:id/rsvp` & `/api/rsvps`)
-- `POST /api/events/:id/rsvp` &ndash; Submit RSVP with guest count; checks capacity limits (*Private*).
-- `DELETE /api/events/:id/rsvp` &ndash; Cancel RSVP and release seats (*Private*).
-- `GET /api/events/:id/rsvps` &ndash; Attendee roster for organizer (*Private*).
-- `GET /api/events/:id/rsvp/status` &ndash; Current user's ticket status for this event (*Private*).
-- `GET /api/rsvps/my-rsvps` &ndash; All active reservations for logged-in user (*Private*).
-
-### User Management (`/api/users`)
-- `PUT /api/users/profile` &ndash; Update full name, bio, organization, avatar (*Private*).
-- `PUT /api/users/password` &ndash; Change password (*Private*).
-- `GET /api/users/stats` &ndash; Aggregate counts for hosted events, total attendees, and RSVPs (*Private*).
-
----
-
-## 🧪 Testing the Production Build
-To verify the production bundle:
+### Start Frontend Dev Server (Port 5173)
 ```bash
-npm run build
+cd frontend
+npm run dev
 ```
-Builds the optimized production assets into `frontend/dist/`.
+
+Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 ---
 
-## 📄 License
-ISC License &bull; Designed and built for LuckyEvents.
+## 📡 REST API Reference
+
+### Auth
+- `POST /api/auth/register` — Register new customer account (`name`, `email`, `password`, `phone`)
+- `POST /api/auth/login` — Login user & return JWT token
+- `GET /api/auth/me` — Return current authenticated profile *(Auth required)*
+
+### Catalog (Categories & Services)
+- `GET /api/categories` — List active categories *(Public)*
+- `POST /api/categories` — Create category *(Admin only)*
+- `PUT /api/categories/:id` — Update category *(Admin only)*
+- `DELETE /api/categories/:id` — Delete category *(Admin only)*
+- `GET /api/services` — List active add-on services *(Public)*
+- `POST /api/services` — Create add-on service *(Admin only)*
+- `PUT /api/services/:id` — Update add-on service *(Admin only)*
+- `DELETE /api/services/:id` — Delete add-on service *(Admin only)*
+
+### Bookings
+- `POST /api/bookings` — Create new booking with server-side price computation *(Customer)*
+- `GET /api/bookings/my` — Get logged-in customer's bookings *(Customer)*
+- `GET /api/bookings` — Get all bookings with status filter *(Admin only)*
+- `GET /api/bookings/assigned` — Get bookings assigned to logged-in staff member *(Staff only)*
+- `PATCH /api/bookings/:id/status` — Update booking status (`pending`, `confirmed`, `assigned`, `completed`, `cancelled`)
+- `PATCH /api/bookings/:id/assign` — Assign staff member(s) to a booking *(Admin only)*
+- `DELETE /api/bookings/:id` — Remove booking *(Admin only)*
+- `GET /api/bookings/stats` — Aggregate metrics and total revenue *(Admin only)*
+
+### Staff
+- `GET /api/staff` — List staff accounts *(Admin only)*
+- `POST /api/staff` — Create staff account *(Admin only)*
+
+---
+
+## ✅ Definition of Done Verification Checklist
+
+- [x] **Seed script** populates 1 admin, 1 staff, 1 customer, 4 categories, and 6 add-on services.
+- [x] **Customer booking & live preview** matches pricing formula:
+  $$\text{Category Total} + \text{Add-ons Total} = \text{Grand Total}$$
+- [x] **Server-side authority:** Booking price stored on MongoDB matches server computation independent of frontend values.
+- [x] **Frozen price breakdown:** Category and add-on unit prices at creation time are preserved permanently in `priceBreakdown`.
+- [x] **Admin workflows:** Admin can confirm bookings, assign staff members, manage categories/services, and view stats.
+- [x] **Staff dashboard:** Staff members see only events assigned to them and can update operational status.
+- [x] **RBAC security barrier:** Gated with `authMiddleware` + `roleMiddleware` on routes and protected views.

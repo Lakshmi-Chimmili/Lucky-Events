@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
 // Protect routes - Verify JWT token
-const protect = async (req, res, next) => {
+const authMiddleware = async (req, res, next) => {
   let token;
 
   if (
@@ -15,7 +15,7 @@ const protect = async (req, res, next) => {
   if (!token) {
     return res.status(401).json({
       success: false,
-      message: 'Not authorized to access this resource. Please log in.',
+      message: 'Not authorized to access this route. Please log in.',
     });
   }
 
@@ -24,7 +24,7 @@ const protect = async (req, res, next) => {
       token,
       process.env.JWT_SECRET || 'super_secret_luckyevents_jwt_key_2026_modern_saas'
     );
-    const user = await User.findById(decoded.id).select('-password');
+    const user = await User.findById(decoded.id).select('-passwordHash');
 
     if (!user) {
       return res.status(401).json({
@@ -38,48 +38,35 @@ const protect = async (req, res, next) => {
   } catch (error) {
     return res.status(401).json({
       success: false,
-      message: 'Token is invalid or has expired. Please log in again.',
+      message: 'Authorization token is invalid or has expired. Please log in again.',
     });
   }
 };
 
-// Optional Auth - attaches user if valid token present, but doesn't block if missing
-const optionalAuth = async (req, res, next) => {
-  let token;
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith('Bearer')
-  ) {
-    token = req.headers.authorization.split(' ')[1];
-  }
-
-  if (!token) {
-    return next();
-  }
-
-  try {
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET || 'super_secret_luckyevents_jwt_key_2026_modern_saas'
-    );
-    req.user = await User.findById(decoded.id).select('-password');
-  } catch (error) {
-    // If token invalid, proceed as guest
-  }
-  next();
-};
-
-// Grant access to specific roles
-const authorize = (...roles) => {
+// Role-based access control middleware
+const roleMiddleware = (...roles) => {
   return (req, res, next) => {
-    if (!req.user || !roles.includes(req.user.role)) {
-      return res.status(403).json({
+    if (!req.user) {
+      return res.status(401).json({
         success: false,
-        message: `User role '${req.user ? req.user.role : 'guest'}' is not authorized to access this route.`,
+        message: 'Authentication required.',
       });
     }
+
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        message: `Forbidden: Access restricted. Role '${req.user.role}' is not authorized.`,
+      });
+    }
+
     next();
   };
 };
 
-module.exports = { protect, optionalAuth, authorize };
+module.exports = {
+  authMiddleware,
+  protect: authMiddleware, // Alias for convenience
+  roleMiddleware,
+  authorize: roleMiddleware, // Alias
+};

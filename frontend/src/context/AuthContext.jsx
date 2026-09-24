@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { api } from '../api/client';
+import { authAPI } from '../api/axios';
 
 const AuthContext = createContext(null);
 
@@ -20,7 +20,6 @@ export const AuthProvider = ({ children }) => {
     setToast((prev) => ({ ...prev, show: false }));
   };
 
-  // Verify token on startup
   useEffect(() => {
     const verifyUser = async () => {
       const storedToken = localStorage.getItem('luckyevents_token');
@@ -30,15 +29,15 @@ export const AuthProvider = ({ children }) => {
       }
 
       try {
-        const res = await api.auth.getMe();
+        const res = await authAPI.getMe();
         if (res.success && res.user) {
           setUser(res.user);
         } else {
           localStorage.removeItem('luckyevents_token');
           setToken(null);
+          setUser(null);
         }
       } catch (err) {
-        console.warn('Session expired or invalid:', err.message);
         localStorage.removeItem('luckyevents_token');
         setToken(null);
         setUser(null);
@@ -52,13 +51,13 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const res = await api.auth.login({ email, password });
+      const res = await authAPI.login({ email, password });
       if (res.success && res.token) {
         localStorage.setItem('luckyevents_token', res.token);
         setToken(res.token);
         setUser(res.user);
         showToast(`Welcome back, ${res.user.name}!`, 'success');
-        return { success: true };
+        return { success: true, user: res.user };
       }
     } catch (err) {
       showToast(err.message || 'Login failed. Please check credentials.', 'error');
@@ -68,13 +67,13 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (userData) => {
     try {
-      const res = await api.auth.register(userData);
+      const res = await authAPI.register(userData);
       if (res.success && res.token) {
         localStorage.setItem('luckyevents_token', res.token);
         setToken(res.token);
         setUser(res.user);
-        showToast('Registration complete! Welcome aboard.', 'success');
-        return { success: true };
+        showToast('Account created successfully! Welcome aboard.', 'success');
+        return { success: true, user: res.user };
       }
     } catch (err) {
       showToast(err.message || 'Registration failed.', 'error');
@@ -89,19 +88,17 @@ export const AuthProvider = ({ children }) => {
     showToast('You have been logged out.', 'info');
   };
 
-  const updateUser = (updatedData) => {
-    setUser((prev) => ({ ...prev, ...updatedData }));
-  };
-
   const value = {
     user,
     token,
     loading,
     isAuthenticated: !!user,
+    isAdmin: user?.role === 'admin',
+    isStaff: user?.role === 'staff',
+    isCustomer: user?.role === 'customer',
     login,
     register,
     logout,
-    updateUser,
     toast,
     showToast,
     hideToast,
