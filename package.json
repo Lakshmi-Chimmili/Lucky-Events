@@ -1,27 +1,28 @@
 {
   "name": "luckyevents",
   "version": "1.0.0",
-  "description": "Full-stack SaaS event management web app with ExpressJS, MongoDB, ReactJS, and styled-components.",
+  "description": "Full-stack MERN Event Management Booking Platform with ExpressJS, MongoDB, React, and Tailwind CSS.",
+  "main": "backend/src/server.js",
   "scripts": {
     "start": "node backend/src/server.js",
     "server": "npm run dev --prefix backend",
     "client": "npm run dev --prefix frontend",
     "dev": "concurrently \"npm run server\" \"npm run client\"",
     "seed": "npm run seed --prefix backend",
-    "install:all": "npm install --prefix backend && npm install --prefix frontend",
-    "build": "npm run build --prefix frontend"
+    "install-deps": "npm install --prefix backend && npm install --prefix frontend --include=dev",
+    "build": "npm install --prefix backend && npm install --prefix frontend --include=dev && npm run build --prefix frontend"
   },
-  "devDependencies": {
+  "dependencies": {
     "concurrently": "^9.2.4"
   },
   "keywords": [
     "event-management",
-    "saas",
+    "mern",
     "express",
     "react",
     "mongodb",
-    "styled-components",
-    "rsvp"
+    "tailwind",
+    "booking"
   ],
   "author": "",
   "license": "ISC"

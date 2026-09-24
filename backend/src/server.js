@@ -77,6 +77,29 @@ app.use('/api/bookings', bookingRoutes);
 app.use('/staff', staffRoutes);
 app.use('/api/staff', staffRoutes);
 
+// Serve static frontend assets in production (Full-stack single service deployment)
+const path = require('path');
+const fs = require('fs');
+
+const frontendDistPath = path.join(__dirname, '../../frontend/dist');
+if (fs.existsSync(frontendDistPath)) {
+  app.use(express.static(frontendDistPath));
+  app.use((req, res, next) => {
+    if (
+      req.path.startsWith('/api') ||
+      req.path.startsWith('/auth') ||
+      req.path.startsWith('/categories') ||
+      req.path.startsWith('/services') ||
+      req.path.startsWith('/bookings') ||
+      req.path.startsWith('/staff') ||
+      req.path.startsWith('/health')
+    ) {
+      return next();
+    }
+    res.sendFile(path.join(frontendDistPath, 'index.html'));
+  });
+}
+
 // Error handlers
 app.use(notFound);
 app.use(errorHandler);
