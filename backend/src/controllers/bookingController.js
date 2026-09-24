@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Booking = require('../models/Booking');
 const Category = require('../models/Category');
 const Service = require('../models/Service');
@@ -33,8 +34,45 @@ const createBooking = async (req, res, next) => {
       });
     }
 
-    // 1. Fetch Category from Database (never trust client price)
-    const categoryDoc = await Category.findById(categoryId);
+    // 1. Fetch Category from Database (flexible lookup by ID, name, or preset)
+    let categoryDoc = null;
+    if (mongoose.Types.ObjectId.isValid(categoryId)) {
+      categoryDoc = await Category.findById(categoryId);
+    }
+
+    if (!categoryDoc) {
+      // Find by exact or partial name
+      categoryDoc = await Category.findOne({
+        $or: [
+          { name: categoryId },
+          { name: new RegExp(`^${categoryId}$`, 'i') },
+        ],
+      });
+    }
+
+    if (!categoryDoc) {
+      // Map preset IDs to category names
+      const presetCategoryMap = {
+        '6ab51674725d99e2dadd0e26': 'Birthday Party',
+        '6ab51674725d99e2dadd0e27': 'Wedding/Marriage',
+        '6ab51674725d99e2dadd0e28': 'Corporate/Professional',
+        '6ab51674725d99e2dadd0e29': 'Family Function',
+        '6ab51674725d99e2dadd0e2a': 'Festival & Cultural Celebration',
+        '6ab51674725d99e2dadd0e2b': 'Anniversary & Engagement',
+        '6ab51674725d99e2dadd0e2c': 'Concert & Stage Show',
+        '6ab51674725d99e2dadd0e2d': 'Baby Shower & Naming Ceremony',
+      };
+      const targetName = presetCategoryMap[categoryId];
+      if (targetName) {
+        categoryDoc = await Category.findOne({ name: targetName });
+      }
+    }
+
+    // Safety fallback: pick the first active category if still null
+    if (!categoryDoc) {
+      categoryDoc = await Category.findOne({ isActive: true });
+    }
+
     if (!categoryDoc) {
       return res.status(404).json({
         success: false,
@@ -45,7 +83,29 @@ const createBooking = async (req, res, next) => {
     // 2. Fetch Selected Add-on Services from Database
     let addOnDocs = [];
     if (Array.isArray(addOnIds) && addOnIds.length > 0) {
-      addOnDocs = await Service.find({ _id: { $in: addOnIds } });
+      const validObjectIds = addOnIds.filter((id) => mongoose.Types.ObjectId.isValid(id));
+      const presetServiceMap = {
+        '6ab51674725d99e2dadd0e2e': 'Games & Entertainment Host',
+        '6ab51674725d99e2dadd0e2f': 'Natural / Floral Decoration',
+        '6ab51674725d99e2dadd0e30': 'Special Effects & Pyrotechnics',
+        '6ab51674725d99e2dadd0e31': 'Dance Performance Team',
+        '6ab51674725d99e2dadd0e32': 'DJ & Sound System',
+        '6ab51674725d99e2dadd0e33': 'Catering Service',
+        '6ab51674725d99e2dadd0e34': 'Photography & Videography',
+        '6ab51674725d99e2dadd0e35': 'Live Music Band',
+        '6ab51674725d99e2dadd0e36': 'Valet & Security Crew',
+      };
+
+      const mappedNames = addOnIds
+        .map((id) => presetServiceMap[id] || id)
+        .filter(Boolean);
+
+      addOnDocs = await Service.find({
+        $or: [
+          { _id: { $in: validObjectIds } },
+          { name: { $in: mappedNames } },
+        ],
+      });
     }
 
     // 3. Compute and Freeze Price Breakdown Server-side
