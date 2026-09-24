@@ -2,14 +2,22 @@ import axios from 'axios';
 
 const getBaseURL = () => {
   const envUrl = import.meta.env.VITE_API_URL;
-  if (!envUrl) {
-    if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+  if (envUrl) {
+    const clean = envUrl.replace(/\/+$/, '');
+    return clean.endsWith('/api') ? clean : `${clean}/api`;
+  }
+  if (typeof window !== 'undefined') {
+    const { hostname, port } = window.location;
+    // When running in production on Vercel or Render
+    if (hostname.endsWith('.vercel.app') || hostname.endsWith('.onrender.com')) {
       return 'https://lucky-events.onrender.com/api';
     }
-    return '/api';
+    // When accessing via external domain name
+    if (hostname !== 'localhost' && hostname !== '127.0.0.1' && port !== '5173' && port !== '3000') {
+      return 'https://lucky-events.onrender.com/api';
+    }
   }
-  const clean = envUrl.replace(/\/+$/, '');
-  return clean.endsWith('/api') ? clean : `${clean}/api`;
+  return '/api';
 };
 
 export const api = axios.create({
