@@ -90,8 +90,12 @@ export const Navbar = () => {
                 {getDashboardLabel()}
               </Link>
 
-              <div className="flex items-center gap-2 text-sm text-slate-300 bg-white/5 border border-white/10 px-3 py-1.5 rounded-full">
-                <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+              <Link
+                to="/profile"
+                className="flex items-center gap-2 text-sm text-slate-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 px-3 py-1.5 rounded-full transition-all"
+                title="View Profile Settings"
+              >
+                <User size={14} className="text-indigo-400" />
                 <span className="font-semibold text-white">
                   {user?.name ? user.name.split(' ')[0] : 'Account'}
                 </span>
@@ -100,7 +104,7 @@ export const Navbar = () => {
                     {user.role}
                   </span>
                 )}
-              </div>
+              </Link>
 
               <button
                 onClick={handleLogout}
@@ -171,6 +175,13 @@ export const Navbar = () => {
                 className="block text-indigo-300 font-bold"
               >
                 {getDashboardLabel()} {user?.role ? `(${user.role})` : ''}
+              </Link>
+              <Link
+                to="/profile"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block text-slate-200 font-medium py-1"
+              >
+                My Profile Settings
               </Link>
               <button
                 onClick={() => {

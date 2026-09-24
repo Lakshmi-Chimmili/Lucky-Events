@@ -21,6 +21,7 @@ import { RegisterPage } from './pages/RegisterPage';
 import { CustomerDashboardPage } from './pages/CustomerDashboardPage';
 import { StaffDashboardPage } from './pages/StaffDashboardPage';
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
+import { ProfilePage } from './pages/ProfilePage';
 
 // Smart Dashboard Redirection based on role
 const DashboardDispatcher = () => {
@@ -106,6 +107,16 @@ function App() {
                   element={
                     <RoleProtectedRoute allowedRoles={['admin']}>
                       <AdminDashboardPage />
+                    </RoleProtectedRoute>
+                  }
+                />
+
+                {/* Profile Settings */}
+                <Route
+                  path="/profile"
+                  element={
+                    <RoleProtectedRoute allowedRoles={['customer', 'staff', 'admin']}>
+                      <ProfilePage />
                     </RoleProtectedRoute>
                   }
                 />

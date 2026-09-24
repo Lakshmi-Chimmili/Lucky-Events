@@ -81,6 +81,20 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const updateProfile = async (profileData) => {
+    try {
+      const res = await authAPI.updateProfile(profileData);
+      if (res.success && res.user) {
+        setUser(res.user);
+        showToast('Profile updated successfully!', 'success');
+        return { success: true, user: res.user };
+      }
+    } catch (err) {
+      showToast(err.message || 'Profile update failed.', 'error');
+      return { success: false, error: err.message };
+    }
+  };
+
   const logout = () => {
     localStorage.removeItem('luckyevents_token');
     setToken(null);
@@ -98,6 +112,7 @@ export const AuthProvider = ({ children }) => {
     isCustomer: user?.role === 'customer',
     login,
     register,
+    updateProfile,
     logout,
     toast,
     showToast,
