@@ -1,82 +1,40 @@
 import React from 'react';
-import styled from 'styled-components';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-
-const PaginationWrapper = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  margin-top: 40px;
-`;
-
-const PageBtn = styled.button`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 40px;
-  height: 40px;
-  padding: 0 12px;
-  border-radius: ${({ theme }) => theme.radii.md};
-  font-size: 0.9rem;
-  font-weight: 600;
-  transition: ${({ theme }) => theme.transitions.fast};
-
-  background: ${({ $active, theme }) =>
-    $active ? theme.colors.primary : 'rgba(255, 255, 255, 0.05)'};
-  color: ${({ $active, theme }) =>
-    $active ? theme.colors.white : theme.colors.textSecondary};
-  border: 1px solid
-    ${({ $active, theme }) =>
-      $active ? theme.colors.primary : 'rgba(255, 255, 255, 0.1)'};
-
-  &:hover:not(:disabled) {
-    background: ${({ $active, theme }) =>
-      $active ? theme.colors.primaryHover : 'rgba(255, 255, 255, 0.1)'};
-    color: ${({ theme }) => theme.colors.white};
-  }
-
-  &:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
-`;
 
 export const Pagination = ({ currentPage, totalPages, onPageChange }) => {
   if (totalPages <= 1) return null;
 
-  const pages = [];
-  for (let i = 1; i <= totalPages; i++) {
-    pages.push(i);
-  }
-
   return (
-    <PaginationWrapper>
-      <PageBtn
+    <div className="flex items-center justify-center gap-2 py-6">
+      <button
         onClick={() => onPageChange(currentPage - 1)}
-        disabled={currentPage <= 1}
-        aria-label="Previous Page"
+        disabled={currentPage === 1}
+        className="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white disabled:opacity-40 transition"
       >
-        <ChevronLeft size={18} />
-      </PageBtn>
+        <ChevronLeft className="w-4 h-4" />
+      </button>
 
-      {pages.map((p) => (
-        <PageBtn
-          key={p}
-          $active={p === currentPage}
-          onClick={() => onPageChange(p)}
+      {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+        <button
+          key={page}
+          onClick={() => onPageChange(page)}
+          className={`w-9 h-9 rounded-xl text-xs font-bold transition ${
+            currentPage === page
+              ? 'bg-indigo-600 text-white shadow-md'
+              : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white'
+          }`}
         >
-          {p}
-        </PageBtn>
+          {page}
+        </button>
       ))}
 
-      <PageBtn
+      <button
         onClick={() => onPageChange(currentPage + 1)}
-        disabled={currentPage >= totalPages}
-        aria-label="Next Page"
+        disabled={currentPage === totalPages}
+        className="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white disabled:opacity-40 transition"
       >
-        <ChevronRight size={18} />
-      </PageBtn>
-    </PaginationWrapper>
+        <ChevronRight className="w-4 h-4" />
+      </button>
+    </div>
   );
 };

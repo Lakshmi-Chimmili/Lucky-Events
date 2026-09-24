@@ -741,35 +741,50 @@ export const AdminDashboardPage = () => {
             <div className="p-3 bg-white/5 rounded-xl border border-white/10 space-y-1.5">
               <div className="flex justify-between">
                 <span className="text-slate-400">Host Client:</span>
-                <span className="font-bold text-white">{viewBooking.customer?.name} ({viewBooking.customer?.phone})</span>
+                <span className="font-bold text-white">
+                  {viewBooking.customer?.name} {viewBooking.customer?.phone ? `(${viewBooking.customer.phone})` : ''}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400">Category:</span>
-                <span className="font-bold text-white">{viewBooking.priceBreakdown.categoryName}</span>
+                <span className="font-bold text-white">
+                  {viewBooking.priceBreakdown?.categoryName || viewBooking.category?.name || 'Event Staffing'}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400">Category Calculation:</span>
                 <span className="font-mono text-slate-200">
-                  ₹{viewBooking.priceBreakdown.basePricePerAttendee} × {viewBooking.attendeeCount} guests
+                  ₹{viewBooking.priceBreakdown?.basePricePerAttendee || viewBooking.category?.basePricePerAttendee || 0} × {viewBooking.attendeeCount} guests
                 </span>
               </div>
               <div className="flex justify-between font-bold text-indigo-400 pt-1 border-t border-white/5">
                 <span>Category Total:</span>
-                <span className="font-mono">₹{viewBooking.priceBreakdown.categoryTotal.toLocaleString('en-IN')}</span>
+                <span className="font-mono">
+                  ₹{(viewBooking.priceBreakdown?.categoryTotal || 0).toLocaleString('en-IN')}
+                </span>
               </div>
             </div>
 
             <div className="p-3 bg-white/5 rounded-xl border border-white/10 space-y-1.5">
               <span className="font-bold text-slate-300 block mb-1">Add-ons Itemized</span>
-              {viewBooking.priceBreakdown.addOnsBreakdown?.map((item, i) => (
-                <div key={i} className="flex justify-between text-slate-300">
-                  <span>{item.name} ({item.pricingType})</span>
-                  <span className="font-mono">₹{item.lineTotal.toLocaleString('en-IN')}</span>
-                </div>
-              ))}
+              {viewBooking.priceBreakdown?.addOnsBreakdown &&
+              viewBooking.priceBreakdown.addOnsBreakdown.length > 0 ? (
+                viewBooking.priceBreakdown.addOnsBreakdown.map((item, i) => (
+                  <div key={i} className="flex justify-between text-slate-300">
+                    <span>
+                      {item.name} ({item.pricingType})
+                    </span>
+                    <span className="font-mono">₹{(item.lineTotal || 0).toLocaleString('en-IN')}</span>
+                  </div>
+                ))
+              ) : (
+                <span className="text-slate-500 italic">No add-ons selected</span>
+              )}
               <div className="flex justify-between font-bold text-pink-400 pt-1 border-t border-white/5">
                 <span>Add-ons Total:</span>
-                <span className="font-mono">₹{viewBooking.priceBreakdown.addOnsTotal.toLocaleString('en-IN')}</span>
+                <span className="font-mono">
+                  ₹{(viewBooking.priceBreakdown?.addOnsTotal || 0).toLocaleString('en-IN')}
+                </span>
               </div>
             </div>
 
@@ -777,7 +792,7 @@ export const AdminDashboardPage = () => {
               <div>
                 <span className="text-[10px] uppercase font-bold text-slate-400 block">Frozen Grand Total</span>
                 <span className="text-2xl font-black text-emerald-400 font-mono">
-                  ₹{viewBooking.priceBreakdown.grandTotal.toLocaleString('en-IN')}
+                  ₹{(viewBooking.priceBreakdown?.grandTotal || 0).toLocaleString('en-IN')}
                 </span>
               </div>
               <span className="text-xs font-bold text-white uppercase bg-white/10 px-2.5 py-1 rounded">

@@ -7,6 +7,8 @@ import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { Toast } from './components/Toast';
 import { RoleProtectedRoute } from './components/RoleProtectedRoute';
+import { LoadingSpinner } from './components/LoadingSpinner';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 // Pages
 import { HomePage } from './pages/HomePage';
@@ -22,7 +24,10 @@ import { AdminDashboardPage } from './pages/AdminDashboardPage';
 
 // Smart Dashboard Redirection based on role
 const DashboardDispatcher = () => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+  if (loading) {
+    return <LoadingSpinner label="Loading dashboard..." padding="120px 20px" />;
+  }
   if (!user) return <Navigate to="/login" replace />;
   if (user.role === 'admin') return <Navigate to="/admin" replace />;
   if (user.role === 'staff') return <Navigate to="/staff-dashboard" replace />;
@@ -50,68 +55,70 @@ const NotFoundPage = () => (
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100 font-sans selection:bg-indigo-500 selection:text-white">
-          <Navbar />
-          <Toast />
-          <main className="flex-1">
-            <Routes>
-              {/* Public Routes */}
-              <Route path="/" element={<HomePage />} />
-              <Route path="/categories" element={<CategoriesPage />} />
-              <Route path="/categories/:id" element={<CategoryDetailPage />} />
-              <Route path="/services" element={<ServicesPage />} />
+    <ErrorBoundary>
+      <AuthProvider>
+        <Router>
+          <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100 font-sans selection:bg-indigo-500 selection:text-white">
+            <Navbar />
+            <Toast />
+            <main className="flex-1">
+              <Routes>
+                {/* Public Routes */}
+                <Route path="/" element={<HomePage />} />
+                <Route path="/categories" element={<CategoriesPage />} />
+                <Route path="/categories/:id" element={<CategoryDetailPage />} />
+                <Route path="/services" element={<ServicesPage />} />
 
-              {/* Booking Wizard */}
-              <Route path="/book" element={<BookingWizardPage />} />
+                {/* Booking Wizard */}
+                <Route path="/book" element={<BookingWizardPage />} />
 
-              {/* Auth Routes */}
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
-              <Route path="/signup" element={<Navigate to="/register" replace />} />
+                {/* Auth Routes */}
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/register" element={<RegisterPage />} />
+                <Route path="/signup" element={<Navigate to="/register" replace />} />
 
-              {/* Universal Dashboard dispatcher */}
-              <Route path="/dashboard" element={<DashboardDispatcher />} />
+                {/* Universal Dashboard dispatcher */}
+                <Route path="/dashboard" element={<DashboardDispatcher />} />
 
-              {/* Customer Dashboard */}
-              <Route
-                path="/my-bookings"
-                element={
-                  <RoleProtectedRoute allowedRoles={['customer']}>
-                    <CustomerDashboardPage />
-                  </RoleProtectedRoute>
-                }
-              />
+                {/* Customer Dashboard */}
+                <Route
+                  path="/my-bookings"
+                  element={
+                    <RoleProtectedRoute allowedRoles={['customer']}>
+                      <CustomerDashboardPage />
+                    </RoleProtectedRoute>
+                  }
+                />
 
-              {/* Staff Dashboard */}
-              <Route
-                path="/staff-dashboard"
-                element={
-                  <RoleProtectedRoute allowedRoles={['staff']}>
-                    <StaffDashboardPage />
-                  </RoleProtectedRoute>
-                }
-              />
+                {/* Staff Dashboard */}
+                <Route
+                  path="/staff-dashboard"
+                  element={
+                    <RoleProtectedRoute allowedRoles={['staff']}>
+                      <StaffDashboardPage />
+                    </RoleProtectedRoute>
+                  }
+                />
 
-              {/* Admin Dashboard */}
-              <Route
-                path="/admin"
-                element={
-                  <RoleProtectedRoute allowedRoles={['admin']}>
-                    <AdminDashboardPage />
-                  </RoleProtectedRoute>
-                }
-              />
+                {/* Admin Dashboard */}
+                <Route
+                  path="/admin"
+                  element={
+                    <RoleProtectedRoute allowedRoles={['admin']}>
+                      <AdminDashboardPage />
+                    </RoleProtectedRoute>
+                  }
+                />
 
-              {/* 404 Fallback */}
-              <Route path="*" element={<NotFoundPage />} />
-            </Routes>
-          </main>
-          <Footer />
-        </div>
-      </Router>
-    </AuthProvider>
+                {/* 404 Fallback */}
+                <Route path="*" element={<NotFoundPage />} />
+              </Routes>
+            </main>
+            <Footer />
+          </div>
+        </Router>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
 

@@ -305,32 +305,34 @@ export const CustomerDashboardPage = () => {
             <div className="p-3 bg-white/5 rounded-xl border border-white/10 space-y-2">
               <div className="flex justify-between">
                 <span className="text-slate-400">Category:</span>
-                <span className="font-bold text-white">{viewBooking.priceBreakdown.categoryName}</span>
+                <span className="font-bold text-white">
+                  {viewBooking.priceBreakdown?.categoryName || viewBooking.category?.name || 'Event Staffing'}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400">Rate per Attendee:</span>
                 <span className="font-mono text-slate-200">
-                  ₹{viewBooking.priceBreakdown.basePricePerAttendee} × {viewBooking.attendeeCount} guests
+                  ₹{viewBooking.priceBreakdown?.basePricePerAttendee || viewBooking.category?.basePricePerAttendee || 0} × {viewBooking.attendeeCount} guests
                 </span>
               </div>
               <div className="flex justify-between font-bold text-white pt-1 border-t border-white/5">
                 <span>Category Total:</span>
                 <span className="font-mono text-indigo-400">
-                  ₹{viewBooking.priceBreakdown.categoryTotal.toLocaleString('en-IN')}
+                  ₹{(viewBooking.priceBreakdown?.categoryTotal || 0).toLocaleString('en-IN')}
                 </span>
               </div>
             </div>
 
             <div className="p-3 bg-white/5 rounded-xl border border-white/10 space-y-2">
               <span className="font-bold text-slate-300 block mb-1">Add-On Services Breakdown</span>
-              {viewBooking.priceBreakdown.addOnsBreakdown &&
+              {viewBooking.priceBreakdown?.addOnsBreakdown &&
               viewBooking.priceBreakdown.addOnsBreakdown.length > 0 ? (
                 viewBooking.priceBreakdown.addOnsBreakdown.map((item, i) => (
                   <div key={i} className="flex justify-between text-slate-300 pt-1 border-t border-white/5">
                     <span>
                       {item.name} ({item.pricingType})
                     </span>
-                    <span className="font-mono">₹{item.lineTotal.toLocaleString('en-IN')}</span>
+                    <span className="font-mono">₹{(item.lineTotal || 0).toLocaleString('en-IN')}</span>
                   </div>
                 ))
               ) : (
@@ -339,7 +341,7 @@ export const CustomerDashboardPage = () => {
               <div className="flex justify-between font-bold text-pink-400 pt-1 border-t border-white/5">
                 <span>Add-ons Total:</span>
                 <span className="font-mono">
-                  ₹{viewBooking.priceBreakdown.addOnsTotal.toLocaleString('en-IN')}
+                  ₹{(viewBooking.priceBreakdown?.addOnsTotal || 0).toLocaleString('en-IN')}
                 </span>
               </div>
             </div>
@@ -348,7 +350,7 @@ export const CustomerDashboardPage = () => {
               <div>
                 <span className="text-slate-400 block text-[11px] uppercase tracking-wider font-bold">Grand Total</span>
                 <span className="text-2xl font-black text-emerald-400 font-mono">
-                  ₹{viewBooking.priceBreakdown.grandTotal.toLocaleString('en-IN')}
+                  ₹{(viewBooking.priceBreakdown?.grandTotal || 0).toLocaleString('en-IN')}
                 </span>
               </div>
               <span className="text-[10px] text-emerald-300 bg-emerald-500/20 px-2 py-1 rounded">

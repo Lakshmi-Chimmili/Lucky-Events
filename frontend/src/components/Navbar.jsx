@@ -92,10 +92,14 @@ export const Navbar = () => {
 
               <div className="flex items-center gap-2 text-sm text-slate-300 bg-white/5 border border-white/10 px-3 py-1.5 rounded-full">
                 <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-                <span className="font-semibold text-white">{user.name.split(' ')[0]}</span>
-                <span className="text-[10px] uppercase font-bold text-slate-400 bg-white/10 px-1.5 py-0.5 rounded">
-                  {user.role}
+                <span className="font-semibold text-white">
+                  {user?.name ? user.name.split(' ')[0] : 'Account'}
                 </span>
+                {user?.role && (
+                  <span className="text-[10px] uppercase font-bold text-slate-400 bg-white/10 px-1.5 py-0.5 rounded">
+                    {user.role}
+                  </span>
+                )}
               </div>
 
               <button
@@ -166,7 +170,7 @@ export const Navbar = () => {
                 onClick={() => setMobileMenuOpen(false)}
                 className="block text-indigo-300 font-bold"
               >
-                {getDashboardLabel()} ({user.role})
+                {getDashboardLabel()} {user?.role ? `(${user.role})` : ''}
               </Link>
               <button
                 onClick={() => {
@@ -175,7 +179,7 @@ export const Navbar = () => {
                 }}
                 className="block text-rose-400 font-semibold text-sm"
               >
-                Log Out ({user.name})
+                Log Out {user?.name ? `(${user.name})` : ''}
               </button>
             </div>
           ) : (

@@ -266,7 +266,14 @@ export const BookingWizardPage = () => {
                 })}
               </div>
 
-              <div className="pt-4 flex justify-end">
+              <div className="pt-4 flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => navigate('/categories')}
+                  className="flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-white transition"
+                >
+                  <ArrowLeft size={16} /> Back to Categories
+                </button>
                 <button
                   type="button"
                   onClick={() => setCurrentStep(2)}
