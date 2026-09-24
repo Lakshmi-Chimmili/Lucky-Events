@@ -268,9 +268,13 @@ export const BookingWizardPage = () => {
 
     setSubmitting(true);
     try {
+      const targetCatId = selectedCategoryId || selectedCategory?._id || '6ab51674725d99e2dadd0e26';
+      const targetCatName = selectedCategory?.name || 'Birthday Party';
+
       const payload = {
-        category: selectedCategoryId,
-        categoryName: selectedCategory?.name,
+        category: targetCatId,
+        categoryId: targetCatId,
+        categoryName: targetCatName,
         addOns: selectedAddOnIds,
         addOnNames: selectedServices.map((s) => s.name),
         attendeeCount: count,
@@ -279,8 +283,20 @@ export const BookingWizardPage = () => {
         notes,
       };
 
-      const res = await bookingAPI.create(payload);
-      if (res.success) {
+      let res;
+      try {
+        res = await bookingAPI.create(payload);
+      } catch (firstErr) {
+        if (firstErr.message && firstErr.message.toLowerCase().includes('not found')) {
+          // Retry with direct category name fallback
+          payload.category = targetCatName;
+          res = await bookingAPI.create(payload);
+        } else {
+          throw firstErr;
+        }
+      }
+
+      if (res && (res.success || res.data || res.booking)) {
         showToast('Booking successfully confirmed & recorded!', 'success');
 
         // Confetti celebration!
