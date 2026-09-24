@@ -73,10 +73,27 @@ const createBooking = async (req, res, next) => {
       categoryDoc = await Category.findOne({ isActive: true });
     }
 
+    // Auto-healing fallback: Create category on the fly if DB is completely empty
     if (!categoryDoc) {
-      return res.status(404).json({
-        success: false,
-        message: 'Selected event category not found.',
+      const targetCategoryName = req.body.categoryName || 'Birthday Party';
+      const categoryPriceMap = {
+        'Birthday Party': 400,
+        'Wedding/Marriage': 1200,
+        'Corporate/Professional': 800,
+        'Family Function': 500,
+        'Festival & Cultural Celebration': 450,
+        'Anniversary & Engagement': 600,
+        'Concert & Stage Show': 750,
+        'Baby Shower & Naming Ceremony': 350,
+      };
+      const basePrice = categoryPriceMap[targetCategoryName] || 400;
+
+      categoryDoc = await Category.create({
+        name: targetCategoryName,
+        description: `${targetCategoryName} staffing, hosts, and management setup.`,
+        basePricePerAttendee: basePrice,
+        image: 'https://images.unsplash.com/photo-1513151233558-d860c5398176?w=800',
+        isActive: true,
       });
     }
 

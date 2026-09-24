@@ -267,7 +267,9 @@ export const BookingWizardPage = () => {
     try {
       const payload = {
         category: selectedCategoryId,
+        categoryName: selectedCategory?.name,
         addOns: selectedAddOnIds,
+        addOnNames: selectedServices.map((s) => s.name),
         attendeeCount: count,
         eventDate: new Date(eventDate).toISOString(),
         venueAddress,
