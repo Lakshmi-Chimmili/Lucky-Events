@@ -18,13 +18,147 @@ import { categoryAPI, serviceAPI, bookingAPI } from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 
+const DEFAULT_CATEGORIES = [
+  {
+    _id: '6ab51674725d99e2dadd0e26',
+    name: 'Birthday Party',
+    description: 'Vibrant birthdays with energetic party hosts, interactive games, balloon setups, and music.',
+    image: 'https://images.unsplash.com/photo-1513151233558-d860c5398176?w=800&auto=format&fit=crop&q=80',
+    basePricePerAttendee: 400,
+  },
+  {
+    _id: '6ab51674725d99e2dadd0e27',
+    name: 'Wedding/Marriage',
+    description: 'Grand royal wedding coordination, full hospitality managers, guest welcoming, and flawless execution.',
+    image: 'https://images.unsplash.com/photo-1519741497674-611481863552?w=800&auto=format&fit=crop&q=80',
+    basePricePerAttendee: 1200,
+  },
+  {
+    _id: '6ab51674725d99e2dadd0e28',
+    name: 'Corporate/Professional',
+    description: 'Elite corporate summits, executive conferences, seminars, team retreats, and annual galas.',
+    image: 'https://images.unsplash.com/photo-1511578314322-379afb476865?w=800&auto=format&fit=crop&q=80',
+    basePricePerAttendee: 800,
+  },
+  {
+    _id: '6ab51674725d99e2dadd0e29',
+    name: 'Family Function',
+    description: 'Intimate anniversaries, housewarming rituals, baby showers, and reunions handled with warmth.',
+    image: 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=800&auto=format&fit=crop&q=80',
+    basePricePerAttendee: 500,
+  },
+  {
+    _id: '6ab51674725d99e2dadd0e2a',
+    name: 'Festival & Cultural Celebration',
+    description: 'Traditional festivals, cultural nights, community gatherings, and festive stage management.',
+    image: 'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=800&auto=format&fit=crop&q=80',
+    basePricePerAttendee: 450,
+  },
+  {
+    _id: '6ab51674725d99e2dadd0e2b',
+    name: 'Anniversary & Engagement',
+    description: 'Romantic engagement ceremonies, ring exchange functions, and milestone wedding anniversary celebrations.',
+    image: 'https://images.unsplash.com/photo-1522673607200-164d1b6ce486?w=800&auto=format&fit=crop&q=80',
+    basePricePerAttendee: 600,
+  },
+  {
+    _id: '6ab51674725d99e2dadd0e2c',
+    name: 'Concert & Stage Show',
+    description: 'Large scale music concerts, live performances, award shows, and stage management with sound & lighting.',
+    image: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=800&auto=format&fit=crop&q=80',
+    basePricePerAttendee: 750,
+  },
+  {
+    _id: '6ab51674725d99e2dadd0e2d',
+    name: 'Baby Shower & Naming Ceremony',
+    description: 'Charming traditional & modern baby shower ceremonies, cradling events, and family welcoming rituals.',
+    image: 'https://images.unsplash.com/photo-1519689680058-324335c77eba?w=800&auto=format&fit=crop&q=80',
+    basePricePerAttendee: 350,
+  },
+];
+
+const DEFAULT_SERVICES = [
+  {
+    _id: '6ab51674725d99e2dadd0e2e',
+    name: 'Games & Entertainment Host',
+    description: 'Professional anchor, stage host, fun interactive party games, and gift distribution.',
+    pricingType: 'flat',
+    price: 2000,
+    image: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800&auto=format&fit=crop&q=80',
+  },
+  {
+    _id: '6ab51674725d99e2dadd0e2f',
+    name: 'Natural / Floral Decoration',
+    description: 'Fresh flower mandap, entrance arches, aisle styling, and thematic table centerpiece decor.',
+    pricingType: 'per_attendee',
+    price: 100,
+    image: 'https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=800&auto=format&fit=crop&q=80',
+  },
+  {
+    _id: '6ab51674725d99e2dadd0e30',
+    name: 'Special Effects & Pyrotechnics',
+    description: 'Cold fire sparklers, dry ice fog entry, confetti cannons, and stage atmospheric lighting.',
+    pricingType: 'flat',
+    price: 3000,
+    image: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&auto=format&fit=crop&q=80',
+  },
+  {
+    _id: '6ab51674725d99e2dadd0e31',
+    name: 'Dance Performance Team',
+    description: 'Professional choreographers, Bollywood & contemporary dance troupe for grand entries & stage shows.',
+    pricingType: 'flat',
+    price: 3500,
+    image: 'https://images.unsplash.com/photo-1547153760-18fc86324498?w=800&auto=format&fit=crop&q=80',
+  },
+  {
+    _id: '6ab51674725d99e2dadd0e32',
+    name: 'DJ & Sound System',
+    description: 'High-end line array speakers, bass subwoofers, intelligent moving head lights, and concert DJ.',
+    pricingType: 'flat',
+    price: 5000,
+    image: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=800&auto=format&fit=crop&q=80',
+  },
+  {
+    _id: '6ab51674725d99e2dadd0e33',
+    name: 'Catering Service',
+    description: 'Multi-cuisine buffet spread, live food counters, mocktail bar, and uniformed service staff.',
+    pricingType: 'per_attendee',
+    price: 220,
+    image: 'https://images.unsplash.com/photo-1555244162-803834f70033?w=800&auto=format&fit=crop&q=80',
+  },
+  {
+    _id: '6ab51674725d99e2dadd0e34',
+    name: 'Photography & Videography',
+    description: '4K cinematic teaser video, drone aerial footage, candid photography, and digital photo album.',
+    pricingType: 'flat',
+    price: 7500,
+    image: 'https://images.unsplash.com/photo-1537633552985-df8429e8048b?w=800&auto=format&fit=crop&q=80',
+  },
+  {
+    _id: '6ab51674725d99e2dadd0e35',
+    name: 'Live Music Band',
+    description: 'Acoustic live band, vocalists, keyboardists, and traditional instruments for musical ambiance.',
+    pricingType: 'flat',
+    price: 6000,
+    image: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&auto=format&fit=crop&q=80',
+  },
+  {
+    _id: '6ab51674725d99e2dadd0e36',
+    name: 'Valet & Security Crew',
+    description: 'Uniformed valet drivers, parking management crew, and bouncer security for guest safety.',
+    pricingType: 'flat',
+    price: 2500,
+    image: 'https://images.unsplash.com/photo-1582192730841-2a682d7375f9?w=800&auto=format&fit=crop&q=80',
+  },
+];
+
 export const BookingWizardPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user, isAuthenticated, showToast } = useAuth();
 
-  const [categories, setCategories] = useState([]);
-  const [services, setServices] = useState([]);
+  const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
+  const [services, setServices] = useState(DEFAULT_SERVICES);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
@@ -32,7 +166,7 @@ export const BookingWizardPage = () => {
   const [currentStep, setCurrentStep] = useState(1);
 
   // Form State
-  const [selectedCategoryId, setSelectedCategoryId] = useState('');
+  const [selectedCategoryId, setSelectedCategoryId] = useState(DEFAULT_CATEGORIES[0]._id);
   const [attendeeCount, setAttendeeCount] = useState(100);
   const [eventDate, setEventDate] = useState('');
   const [venueAddress, setVenueAddress] = useState('');
@@ -44,13 +178,12 @@ export const BookingWizardPage = () => {
     const fetchData = async () => {
       try {
         const [catRes, servRes] = await Promise.all([
-          categoryAPI.getAll(),
-          serviceAPI.getAll(),
+          categoryAPI.getAll().catch(() => null),
+          serviceAPI.getAll().catch(() => null),
         ]);
 
-        if (catRes.success) {
+        if (catRes && catRes.success && Array.isArray(catRes.data) && catRes.data.length > 0) {
           setCategories(catRes.data);
-          // Check if category was pre-selected in URL param
           const preCat = searchParams.get('category');
           if (preCat && catRes.data.some((c) => c._id === preCat)) {
             setSelectedCategoryId(preCat);
@@ -59,7 +192,7 @@ export const BookingWizardPage = () => {
           }
         }
 
-        if (servRes.success) {
+        if (servRes && servRes.success && Array.isArray(servRes.data) && servRes.data.length > 0) {
           setServices(servRes.data);
         }
 
