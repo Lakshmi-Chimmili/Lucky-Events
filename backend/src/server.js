@@ -84,6 +84,9 @@ const categoryRoutes = require('./routes/categoryRoutes');
 const serviceRoutes = require('./routes/serviceRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
 const staffRoutes = require('./routes/staffRoutes');
+const eventRoutes = require('./routes/eventRoutes');
+const rsvpRoutes = require('./routes/rsvpRoutes');
+const userRoutes = require('./routes/userRoutes');
 
 // Mount routes (supporting both /api/* and root paths)
 app.use('/auth', authRoutes);
@@ -101,6 +104,15 @@ app.use('/api/bookings', bookingRoutes);
 app.use('/staff', staffRoutes);
 app.use('/api/staff', staffRoutes);
 
+app.use('/events', eventRoutes);
+app.use('/api/events', eventRoutes);
+
+app.use('/rsvps', rsvpRoutes);
+app.use('/api/rsvps', rsvpRoutes);
+
+app.use('/users', userRoutes);
+app.use('/api/users', userRoutes);
+
 // Serve static frontend assets in production (Full-stack single service deployment)
 const path = require('path');
 const fs = require('fs');
@@ -116,6 +128,9 @@ if (fs.existsSync(frontendDistPath)) {
       req.path.startsWith('/services') ||
       req.path.startsWith('/bookings') ||
       req.path.startsWith('/staff') ||
+      req.path.startsWith('/events') ||
+      req.path.startsWith('/rsvps') ||
+      req.path.startsWith('/users') ||
       req.path.startsWith('/health')
     ) {
       return next();

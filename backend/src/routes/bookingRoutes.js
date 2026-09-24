@@ -15,9 +15,9 @@ const router = express.Router();
 
 router.use(authMiddleware); // All booking routes require authentication
 
-// Customer routes
-router.post('/', roleMiddleware('customer', 'admin'), createBooking);
-router.get('/my', roleMiddleware('customer', 'admin'), getMyBookings);
+// Customer / User routes
+router.post('/', roleMiddleware('customer', 'staff', 'admin'), createBooking);
+router.get('/my', roleMiddleware('customer', 'staff', 'admin'), getMyBookings);
 
 // Staff route
 router.get('/assigned', roleMiddleware('staff', 'admin'), getAssignedBookings);
